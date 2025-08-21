@@ -224,8 +224,37 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(experiences).where(eq(experiences.companyId, companyId));
   }
 
-  async getUserExperiences(userId: string): Promise<Experience[]> {
-    return await db.select().from(experiences).where(eq(experiences.userId, userId));
+  async getUserExperiences(userId: string): Promise<Array<Experience & { company: Company | null }>> {
+    return await db
+      .select({
+        id: experiences.id,
+        userId: experiences.userId,
+        companyId: experiences.companyId,
+        position: experiences.position,
+        applicationDate: experiences.applicationDate,
+        receivedResponse: experiences.receivedResponse,
+        responseTime: experiences.responseTime,
+        communicationQuality: experiences.communicationQuality,
+        comments: experiences.comments,
+        isAnonymous: experiences.isAnonymous,
+        createdAt: experiences.createdAt,
+        company: {
+          id: companies.id,
+          name: companies.name,
+          type: companies.type,
+          industry: companies.industry,
+          location: companies.location,
+          description: companies.description,
+          website: companies.website,
+          logoUrl: companies.logoUrl,
+          createdAt: companies.createdAt,
+          updatedAt: companies.updatedAt,
+        }
+      })
+      .from(experiences)
+      .leftJoin(companies, eq(experiences.companyId, companies.id))
+      .where(eq(experiences.userId, userId))
+      .orderBy(experiences.createdAt);
   }
 
   async getCompanyStats(companyId: string): Promise<{

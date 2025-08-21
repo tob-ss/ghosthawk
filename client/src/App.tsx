@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import CompanyDetail from "@/pages/company-detail";
 import ReportExperience from "@/pages/report-experience";
+import MyExperiences from "@/pages/my-experiences";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/company/:id" component={CompanyDetail} />
           <Route path="/report" component={ReportExperience} />
+          <Route path="/my-experiences" component={MyExperiences} />
           
         </>
       )}

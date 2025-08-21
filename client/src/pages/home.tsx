@@ -218,9 +218,11 @@ export default function Home() {
                       </div>
                     ))}
                     {userExperiences && userExperiences.length > 5 && (
-                      <Button variant="outline" className="w-full">
-                        View All Experiences ({userExperiences.length})
-                      </Button>
+                      <Link href="/my-experiences">
+                        <Button variant="outline" className="w-full">
+                          View All Experiences ({userExperiences.length})
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 ) : (

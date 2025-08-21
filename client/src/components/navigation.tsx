@@ -87,8 +87,8 @@ export default function Navigation() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/experiences">
-                      <Search className="mr-2 h-4 w-4" />
+                    <Link href="/my-experiences">
+                      <FileText className="mr-2 h-4 w-4" />
                       My Experiences
                     </Link>
                   </DropdownMenuItem>
