@@ -101,7 +101,7 @@ export default function ExperienceForm() {
       companyType: formData.companyType as "company" | "recruiter",
       companyIndustry: formData.companyIndustry || undefined,
       position: formData.position || undefined,
-      applicationDate: new Date(formData.applicationDate).toISOString(),
+      applicationDate: formData.applicationDate, // Send as string, schema will transform to Date
       receivedResponse: formData.receivedResponse === "yes",
       responseTime: formData.receivedResponse === "yes" ? formData.responseTime : undefined,
       communicationQuality: formData.receivedResponse === "yes" ? formData.communicationQuality : undefined,

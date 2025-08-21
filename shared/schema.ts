@@ -103,10 +103,14 @@ export const insertCompanySchema = createInsertSchema(companies).omit({
 export const insertExperienceSchema = createInsertSchema(experiences).omit({
   id: true,
   createdAt: true,
+  companyId: true, // Will be handled by the backend
 }).extend({
+  // Custom fields for form submission
   companyName: z.string().min(1, "Company name is required"),
   companyType: z.enum(["company", "recruiter"]),
   companyIndustry: z.string().optional(),
+  isAnonymous: z.boolean().default(true),
+  applicationDate: z.string().transform((str) => new Date(str)),
 });
 
 export const searchCompaniesSchema = z.object({
