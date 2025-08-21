@@ -20,7 +20,7 @@ export default function Navigation() {
   const authenticatedNavigation = [
     { name: "Dashboard", href: "/" },
     { name: "Report Experience", href: "/report" },
-    { name: "My Experiences", href: "/experiences" },
+    { name: "My Experiences", href: "/my-experiences" },
   ];
 
   const currentNav = isAuthenticated ? authenticatedNavigation : navigation;

@@ -140,8 +140,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create experience
+      console.log("Creating experience for user:", userId, "anonymous:", data.isAnonymous);
       const experience = await storage.createExperience({
-        userId: data.isAnonymous ? null : userId,
+        userId: userId, // Always store user ID so they can see their own experiences
         companyId: company.id,
         position: data.position,
         applicationDate: data.applicationDate,
@@ -151,6 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         comments: data.comments,
         isAnonymous: data.isAnonymous,
       });
+      console.log("Created experience:", experience.id, "for user:", experience.userId);
 
       res.status(201).json(experience);
     } catch (error) {
@@ -168,7 +170,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/experiences/user", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Fetching experiences for user ID:", userId);
       const experiences = await storage.getUserExperiences(userId);
+      console.log("Found experiences:", experiences.length);
       res.json(experiences);
     } catch (error) {
       console.error("Error fetching user experiences:", error);
