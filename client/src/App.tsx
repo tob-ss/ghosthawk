@@ -19,14 +19,14 @@ function Router() {
         <>
           <Route path="/" component={Landing} />
           <Route path="/company/:id" component={CompanyDetail} />
-          <Route path="*" component={NotFound} />
+          <Route component={NotFound} />
         </>
       ) : (
         <>
           <Route path="/" component={Home} />
           <Route path="/company/:id" component={CompanyDetail} />
           <Route path="/report" component={ReportExperience} />
-          <Route path="*" component={NotFound} />
+          <Route component={NotFound} />
         </>
       )}
     </Switch>
