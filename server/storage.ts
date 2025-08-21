@@ -49,6 +49,13 @@ export interface IStorage {
     topCompanies: { name: string; score: number }[];
     recentTrends: string[];
   }>;
+
+  // Stats operations
+  getStats(): Promise<{
+    totalCompanies: number;
+    totalExperiences: number;
+    avgResponseRate: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -211,6 +218,34 @@ export class DatabaseStorage implements IStorage {
     return {
       companies: companiesWithMetrics,
       total: totalCount,
+    };
+  }
+
+  // Stats operations
+  async getStats(): Promise<{
+    totalCompanies: number;
+    totalExperiences: number;
+    avgResponseRate: number;
+  }> {
+    const [companiesCount] = await db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(companies);
+
+    const [experiencesStats] = await db
+      .select({
+        totalExperiences: sql<number>`cast(count(*) as int)`,
+        respondedCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
+      })
+      .from(experiences);
+
+    const avgResponseRate = experiencesStats.totalExperiences > 0 
+      ? Math.round((experiencesStats.respondedCount / experiencesStats.totalExperiences) * 100)
+      : 0;
+
+    return {
+      totalCompanies: companiesCount.count,
+      totalExperiences: experiencesStats.totalExperiences,
+      avgResponseRate,
     };
   }
 
