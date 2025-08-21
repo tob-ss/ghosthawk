@@ -15,12 +15,15 @@ export default function Navigation() {
   const navigation = [
     { name: "Discover Companies", href: "/#discover" },
     { name: "Industry Insights", href: "/#insights" },
+    { name: "Platform Stats", href: "/stats" },
   ];
 
   const authenticatedNavigation = [
+    { name: "Home", href: "/landing" },
     { name: "Dashboard", href: "/" },
     { name: "Report Experience", href: "/report" },
     { name: "My Experiences", href: "/my-experiences" },
+    { name: "Platform Stats", href: "/stats" },
   ];
 
   const currentNav = isAuthenticated ? authenticatedNavigation : navigation;

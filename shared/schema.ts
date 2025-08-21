@@ -58,6 +58,12 @@ export const experiences = pgTable("experiences", {
   receivedResponse: boolean("received_response").notNull(),
   responseTime: varchar("response_time", { length: 50 }), // 'same_day', '1_3_days', etc.
   communicationQuality: varchar("communication_quality", { length: 50 }), // 'excellent', 'good', 'fair', 'poor'
+  // Interview tracking fields
+  interviewOffered: boolean("interview_offered"),
+  interviewStages: varchar("interview_stages", { length: 100 }), // 'phone', 'video', 'onsite', 'technical', etc.
+  jobOffered: boolean("job_offered"),
+  ghostJob: boolean("ghost_job"), // Was this a fake job posting?
+  rejectionFeedback: boolean("rejection_feedback"), // Did they provide feedback when rejecting?
   comments: text("comments"),
   isAnonymous: boolean("is_anonymous").default(true),
   createdAt: timestamp("created_at").defaultNow(),
@@ -111,6 +117,12 @@ export const insertExperienceSchema = createInsertSchema(experiences).omit({
   companyIndustry: z.string().optional(),
   isAnonymous: z.boolean().default(true),
   applicationDate: z.string().transform((str) => new Date(str)),
+  // Interview tracking fields - make them optional and transform string to boolean
+  interviewOffered: z.string().optional().transform((val) => val === "yes" ? true : val === "no" ? false : undefined),
+  interviewStages: z.string().optional(),
+  jobOffered: z.string().optional().transform((val) => val === "yes" ? true : val === "no" ? false : undefined),
+  ghostJob: z.string().optional().transform((val) => val === "yes" ? true : val === "no" ? false : undefined),
+  rejectionFeedback: z.string().optional().transform((val) => val === "yes" ? true : val === "no" ? false : undefined),
 });
 
 export const searchCompaniesSchema = z.object({

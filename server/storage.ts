@@ -35,7 +35,7 @@ export interface IStorage {
   // Experience operations
   createExperience(experience: InsertExperience): Promise<Experience>;
   getCompanyExperiences(companyId: string): Promise<Experience[]>;
-  getUserExperiences(userId: string): Promise<Experience[]>;
+  getUserExperiences(userId: string): Promise<Array<Experience & { company: Company | null }>>;
   getCompanyStats(companyId: string): Promise<{
     responseRate: number;
     avgResponseTime: number | null;
@@ -55,6 +55,13 @@ export interface IStorage {
     totalCompanies: number;
     totalExperiences: number;
     avgResponseRate: number;
+  }>;
+  
+  getDetailedStats(): Promise<{
+    communicationBreakdown: Record<string, number>;
+    responseTimeBreakdown: Record<string, number>;
+    companyTypeStats: Record<string, { count: number; avgResponseRate: number }>;
+    monthlyTrends: { month: string; companies: number; experiences: number; responseRate: number }[];
   }>;
 }
 
@@ -261,35 +268,15 @@ export class DatabaseStorage implements IStorage {
 
   async getUserExperiences(userId: string): Promise<Array<Experience & { company: Company | null }>> {
     return await db
-      .select({
-        id: experiences.id,
-        userId: experiences.userId,
-        companyId: experiences.companyId,
-        position: experiences.position,
-        applicationDate: experiences.applicationDate,
-        receivedResponse: experiences.receivedResponse,
-        responseTime: experiences.responseTime,
-        communicationQuality: experiences.communicationQuality,
-        comments: experiences.comments,
-        isAnonymous: experiences.isAnonymous,
-        createdAt: experiences.createdAt,
-        company: {
-          id: companies.id,
-          name: companies.name,
-          type: companies.type,
-          industry: companies.industry,
-          location: companies.location,
-          description: companies.description,
-          website: companies.website,
-          logoUrl: companies.logoUrl,
-          createdAt: companies.createdAt,
-          updatedAt: companies.updatedAt,
-        }
-      })
+      .select()
       .from(experiences)
       .leftJoin(companies, eq(experiences.companyId, companies.id))
       .where(eq(experiences.userId, userId))
-      .orderBy(experiences.createdAt);
+      .orderBy(experiences.createdAt)
+      .then(results => results.map(result => ({
+        ...result.experiences,
+        company: result.companies
+      })));
   }
 
   async getCompanyStats(companyId: string): Promise<{
@@ -417,6 +404,103 @@ export class DatabaseStorage implements IStorage {
       industryStats,
       topCompanies,
       recentTrends,
+    };
+  }
+
+  async getDetailedStats(): Promise<{
+    communicationBreakdown: Record<string, number>;
+    responseTimeBreakdown: Record<string, number>;
+    companyTypeStats: Record<string, { count: number; avgResponseRate: number }>;
+    monthlyTrends: { month: string; companies: number; experiences: number; responseRate: number }[];
+  }> {
+    // Get communication quality breakdown
+    const communicationData = await db
+      .select({
+        quality: experiences.communicationQuality,
+        count: sql<number>`cast(count(*) as int)`,
+      })
+      .from(experiences)
+      .where(sql`${experiences.communicationQuality} IS NOT NULL`)
+      .groupBy(experiences.communicationQuality);
+
+    const communicationBreakdown: Record<string, number> = {};
+    communicationData.forEach(item => {
+      if (item.quality) {
+        communicationBreakdown[item.quality] = item.count;
+      }
+    });
+
+    // Get response time breakdown
+    const responseTimeData = await db
+      .select({
+        responseTime: experiences.responseTime,
+        count: sql<number>`cast(count(*) as int)`,
+      })
+      .from(experiences)
+      .where(sql`${experiences.responseTime} IS NOT NULL`)
+      .groupBy(experiences.responseTime);
+
+    const responseTimeBreakdown: Record<string, number> = {};
+    responseTimeData.forEach(item => {
+      if (item.responseTime) {
+        responseTimeBreakdown[item.responseTime] = item.count;
+      }
+    });
+
+    // Get company type statistics
+    const companyTypeData = await db
+      .select({
+        type: companies.type,
+        companyCount: sql<number>`cast(count(distinct ${companies.id}) as int)`,
+        totalExperiences: sql<number>`cast(count(${experiences.id}) as int)`,
+        responseCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
+      })
+      .from(companies)
+      .leftJoin(experiences, eq(companies.id, experiences.companyId))
+      .groupBy(companies.type);
+
+    const companyTypeStats: Record<string, { count: number; avgResponseRate: number }> = {};
+    companyTypeData.forEach(item => {
+      const responseRate = item.totalExperiences > 0 
+        ? Math.round((item.responseCount / item.totalExperiences) * 100) 
+        : 0;
+      
+      companyTypeStats[item.type] = {
+        count: item.companyCount,
+        avgResponseRate: responseRate,
+      };
+    });
+
+    // Generate monthly trends (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const monthlyData = await db
+      .select({
+        month: sql<string>`to_char(${experiences.createdAt}, 'YYYY-MM')`,
+        companies: sql<number>`cast(count(distinct ${experiences.companyId}) as int)`,
+        experiences: sql<number>`cast(count(*) as int)`,
+        responseCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
+      })
+      .from(experiences)
+      .where(sql`${experiences.createdAt} >= ${sixMonthsAgo}`)
+      .groupBy(sql`to_char(${experiences.createdAt}, 'YYYY-MM')`)
+      .orderBy(sql`to_char(${experiences.createdAt}, 'YYYY-MM')`);
+
+    const monthlyTrends = monthlyData.map(month => ({
+      month: month.month,
+      companies: month.companies,
+      experiences: month.experiences,
+      responseRate: month.experiences > 0 
+        ? Math.round((month.responseCount / month.experiences) * 100) 
+        : 0,
+    }));
+
+    return {
+      communicationBreakdown,
+      responseTimeBreakdown,
+      companyTypeStats,
+      monthlyTrends,
     };
   }
 }

@@ -28,11 +28,18 @@ export default function ExperienceForm() {
     receivedResponse: "",
     responseTime: "",
     communicationQuality: "",
+    // New fields for full journey tracking
+    interviewOffered: "",
+    interviewStages: "",
+    jobOffered: "",
+    ghostJob: "",
+    rejectionFeedback: "",
     comments: "",
     isAnonymous: true,
   });
 
   const [showResponseDetails, setShowResponseDetails] = useState(false);
+  const [showInterviewDetails, setShowInterviewDetails] = useState(false);
 
   const createExperience = useMutation({
     mutationFn: async (data: any) => {
@@ -54,10 +61,16 @@ export default function ExperienceForm() {
         receivedResponse: "",
         responseTime: "",
         communicationQuality: "",
+        interviewOffered: "",
+        interviewStages: "",
+        jobOffered: "",
+        ghostJob: "",
+        rejectionFeedback: "",
         comments: "",
         isAnonymous: true,
       });
       setShowResponseDetails(false);
+      setShowInterviewDetails(false);
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/companies/search"] });
       queryClient.invalidateQueries({ queryKey: ["/api/experiences/user"] });
@@ -105,6 +118,12 @@ export default function ExperienceForm() {
       receivedResponse: formData.receivedResponse === "yes",
       responseTime: formData.receivedResponse === "yes" ? formData.responseTime : undefined,
       communicationQuality: formData.receivedResponse === "yes" ? formData.communicationQuality : undefined,
+      // New fields - send as strings, backend will transform them
+      interviewOffered: formData.interviewOffered || undefined,
+      interviewStages: formData.interviewStages || undefined,
+      jobOffered: formData.jobOffered || undefined,
+      ghostJob: formData.ghostJob || undefined,
+      rejectionFeedback: formData.rejectionFeedback || undefined,
       comments: formData.comments || undefined,
       isAnonymous: formData.isAnonymous,
     };
@@ -119,7 +138,23 @@ export default function ExperienceForm() {
       setFormData(prev => ({ 
         ...prev, 
         responseTime: "", 
-        communicationQuality: "" 
+        communicationQuality: "",
+        interviewOffered: "",
+        interviewStages: "",
+        jobOffered: ""
+      }));
+      setShowInterviewDetails(false);
+    }
+  };
+
+  const handleInterviewChange = (value: string) => {
+    setFormData(prev => ({ ...prev, interviewOffered: value }));
+    setShowInterviewDetails(value === "yes");
+    if (value !== "yes") {
+      setFormData(prev => ({ 
+        ...prev, 
+        interviewStages: "",
+        jobOffered: ""
       }));
     }
   };
@@ -296,6 +331,158 @@ export default function ExperienceForm() {
             </div>
           )}
 
+          {/* Interview Progression Section */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700 block mb-3">
+              Were you offered an interview?
+            </Label>
+            <RadioGroup 
+              value={formData.interviewOffered} 
+              onValueChange={handleInterviewChange}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            >
+              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <RadioGroupItem value="yes" id="interview-yes" />
+                <Label htmlFor="interview-yes" className="flex-1 cursor-pointer">
+                  Yes, I was interviewed
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <RadioGroupItem value="no" id="interview-no" />
+                <Label htmlFor="interview-no" className="flex-1 cursor-pointer">
+                  No interview offered
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <RadioGroupItem value="n/a" id="interview-na" />
+                <Label htmlFor="interview-na" className="flex-1 cursor-pointer">
+                  N/A (no response yet)
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {showInterviewDetails && (
+            <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <div>
+                <Label className="text-sm font-medium text-gray-700 block mb-3">
+                  Interview Stages (select all that apply)
+                </Label>
+                <div className="space-y-2">
+                  {[
+                    { value: "phone", label: "Phone screening" },
+                    { value: "video", label: "Video interview" },
+                    { value: "technical", label: "Technical assessment" },
+                    { value: "onsite", label: "On-site interview" },
+                    { value: "panel", label: "Panel interview" },
+                    { value: "multiple", label: "Multiple rounds" }
+                  ].map(({ value, label }) => (
+                    <div key={value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`stage-${value}`}
+                        checked={formData.interviewStages.split(',').filter(s => s.trim()).includes(value)}
+                        onCheckedChange={(checked) => {
+                          setFormData(prev => {
+                            const currentStages = prev.interviewStages.split(',').filter(s => s.trim());
+                            if (checked) {
+                              return { ...prev, interviewStages: [...currentStages, value].join(',') };
+                            } else {
+                              return { ...prev, interviewStages: currentStages.filter(s => s !== value).join(',') };
+                            }
+                          });
+                        }}
+                      />
+                      <Label htmlFor={`stage-${value}`} className="text-sm cursor-pointer">
+                        {label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700 block mb-3">
+                  Were you offered the job?
+                </Label>
+                <RadioGroup 
+                  value={formData.jobOffered} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, jobOffered: value }))}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                >
+                  <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <RadioGroupItem value="yes" id="job-yes" />
+                    <Label htmlFor="job-yes" className="flex-1 cursor-pointer">
+                      Yes, got an offer
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <RadioGroupItem value="no" id="job-no" />
+                    <Label htmlFor="job-no" className="flex-1 cursor-pointer">
+                      No, was rejected
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <RadioGroupItem value="pending" id="job-pending" />
+                    <Label htmlFor="job-pending" className="flex-1 cursor-pointer">
+                      Still waiting
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+          )}
+
+          {/* Additional tracking fields */}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 block mb-3">
+                Do you suspect this was a "ghost job" (fake posting)?
+              </Label>
+              <RadioGroup 
+                value={formData.ghostJob} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, ghostJob: value }))}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <RadioGroupItem value="yes" id="ghost-yes" />
+                  <Label htmlFor="ghost-yes" className="flex-1 cursor-pointer">
+                    Yes, likely fake
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <RadioGroupItem value="no" id="ghost-no" />
+                  <Label htmlFor="ghost-no" className="flex-1 cursor-pointer">
+                    No, seemed legitimate
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700 block mb-3">
+                If rejected, did they provide feedback?
+              </Label>
+              <RadioGroup 
+                value={formData.rejectionFeedback} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, rejectionFeedback: value }))}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <RadioGroupItem value="yes" id="feedback-yes" />
+                  <Label htmlFor="feedback-yes" className="flex-1 cursor-pointer">
+                    Yes, provided feedback
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                  <RadioGroupItem value="no" id="feedback-no" />
+                  <Label htmlFor="feedback-no" className="flex-1 cursor-pointer">
+                    No feedback given
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="comments" className="text-sm font-medium text-gray-700">
               Additional Comments
@@ -335,6 +522,11 @@ export default function ExperienceForm() {
                   receivedResponse: "",
                   responseTime: "",
                   communicationQuality: "",
+                  interviewOffered: "",
+                  interviewStages: "",
+                  jobOffered: "",
+                  ghostJob: "",
+                  rejectionFeedback: "",
                   comments: "",
                   isAnonymous: true,
                 });

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated } from "./localAuth";
 import { 
   insertExperienceSchema, 
   searchCompaniesSchema,
@@ -28,65 +28,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Company routes
   app.get("/api/companies/search", async (req, res) => {
     try {
-      // Mock company data for demo
-      const mockCompanies = [
-        {
-          id: "1",
-          name: "TechCorp Solutions",
-          type: "company",
-          industry: "Technology",
-          location: "San Francisco, CA",
-          description: "Leading software development company",
-          website: "https://techcorp.com",
-          logoUrl: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          responseRate: 78,
-          avgResponseTime: 2.3,
-          totalExperiences: 45,
-          avgRating: 4.2
-        },
-        {
-          id: "2", 
-          name: "ProRecruit Agency",
-          type: "recruiter",
-          industry: "Technology",
-          location: "New York, NY",
-          description: "Technical recruitment specialists",
-          website: "https://prorecruit.com",
-          logoUrl: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          responseRate: 34,
-          avgResponseTime: 8.1,
-          totalExperiences: 23,
-          avgRating: 2.8
-        },
-        {
-          id: "3",
-          name: "HealthTech Inc",
-          type: "company", 
-          industry: "Healthcare",
-          location: "Boston, MA",
-          description: "Healthcare technology innovation",
-          website: "https://healthtech.com",
-          logoUrl: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          responseRate: 65,
-          avgResponseTime: 4.2,
-          totalExperiences: 31,
-          avgRating: 3.9
-        }
-      ];
-
-      res.json({
-        companies: mockCompanies,
-        total: mockCompanies.length
+      const searchParams = searchCompaniesSchema.parse({
+        query: req.query.query,
+        industry: req.query.industry,
+        location: req.query.location,
+        type: req.query.type,
+        responseRate: req.query.responseRate,
+        sortBy: req.query.sortBy || "rating",
+        page: req.query.page ? Number(req.query.page) : 1,
+        limit: req.query.limit ? Number(req.query.limit) : 12,
       });
+
+      const result = await storage.searchCompanies(searchParams);
+      res.json(result);
     } catch (error) {
       console.error("Error searching companies:", error);
-      res.status(400).json({ message: "Invalid search parameters" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid search parameters", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to search companies" });
     }
   });
 
@@ -112,6 +75,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           receivedResponse: exp.receivedResponse,
           responseTime: exp.responseTime,
           communicationQuality: exp.communicationQuality,
+          interviewOffered: exp.interviewOffered,
+          interviewStages: exp.interviewStages,
+          jobOffered: exp.jobOffered,
+          ghostJob: exp.ghostJob,
+          rejectionFeedback: exp.rejectionFeedback,
           comments: exp.comments,
           createdAt: exp.createdAt,
         }))
@@ -149,6 +117,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         receivedResponse: data.receivedResponse,
         responseTime: data.responseTime,
         communicationQuality: data.communicationQuality,
+        // New interview tracking fields
+        interviewOffered: data.interviewOffered,
+        interviewStages: data.interviewStages,
+        jobOffered: data.jobOffered,
+        ghostJob: data.ghostJob,
+        rejectionFeedback: data.rejectionFeedback,
         comments: data.comments,
         isAnonymous: data.isAnonymous,
       });
@@ -183,25 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Insights routes
   app.get("/api/insights", async (req, res) => {
     try {
-      // Mock insights data for demo
-      const insights = {
-        industryStats: {
-          "Technology": { responseRate: 45, avgResponseTime: 3.2 },
-          "Finance": { responseRate: 38, avgResponseTime: 5.1 },
-          "Healthcare": { responseRate: 42, avgResponseTime: 4.8 },
-          "Marketing": { responseRate: 29, avgResponseTime: 6.2 }
-        },
-        topCompanies: [
-          { name: "TechCorp", score: 4.2 },
-          { name: "InnovateCo", score: 4.1 },
-          { name: "DevHub", score: 4.0 }
-        ],
-        recentTrends: [
-          "Healthcare companies have improved response rates by 12% this quarter",
-          "Several recruitment agencies showing increased ghosting patterns",
-          "Best response rates occur on Tuesday-Thursday applications"
-        ]
-      };
+      const insights = await storage.getIndustryInsights();
       res.json(insights);
     } catch (error) {
       console.error("Error fetching insights:", error);
@@ -217,6 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Detailed stats route for analytics page
+  app.get("/api/stats/detailed", async (req, res) => {
+    try {
+      const detailedStats = await storage.getDetailedStats();
+      res.json(detailedStats);
+    } catch (error) {
+      console.error("Error fetching detailed stats:", error);
+      res.status(500).json({ message: "Failed to fetch detailed stats" });
     }
   });
 
