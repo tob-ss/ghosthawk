@@ -33,6 +33,11 @@ export default function MyExperiences() {
     receivedResponse: boolean;
     responseTime?: string;
     communicationQuality?: string;
+    interviewOffered?: boolean | null;
+    interviewStages?: string | null;
+    jobOffered?: boolean | null;
+    ghostJob?: boolean | null;
+    rejectionFeedback?: boolean | null;
     comments?: string;
     createdAt: string;
     company: {
@@ -86,6 +91,25 @@ export default function MyExperiences() {
       case 'poor': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const formatInterviewStages = (stages?: string | null) => {
+    if (!stages) return 'N/A';
+    const stageMap: Record<string, string> = {
+      'phone': 'Phone Interview',
+      'video': 'Video Interview',
+      'technical': 'Technical Interview',
+      'onsite': 'Onsite Interview',
+      'panel': 'Panel Interview',
+      'multiple': 'Multiple Rounds'
+    };
+    return stages.split(',').map(stage => stageMap[stage.trim()] || stage).join(', ');
+  };
+
+  const getBooleanBadge = (trueLabel: string, falseLabel: string, value?: boolean | null) => {
+    if (value === true) return <Badge className="bg-green-100 text-green-800">{trueLabel}</Badge>;
+    if (value === false) return <Badge className="bg-red-100 text-red-800">{falseLabel}</Badge>;
+    return <Badge variant="secondary">Not Specified</Badge>;
   };
 
 
@@ -248,6 +272,49 @@ export default function MyExperiences() {
                       <span>Reported: {new Date(experience.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
+
+                  {/* Interview Tracking Section */}
+                  {(experience.interviewOffered !== null || experience.jobOffered !== null || experience.ghostJob !== null) && (
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-blue-900 mb-3">Interview Process</h4>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {experience.interviewOffered !== null && (
+                          <div>
+                            <span className="text-sm text-gray-600 mr-2">Interview Offered:</span>
+                            {getBooleanBadge("Yes", "No", experience.interviewOffered)}
+                          </div>
+                        )}
+                        
+                        {experience.interviewStages && (
+                          <div className="md:col-span-2">
+                            <span className="text-sm text-gray-600 mr-2">Interview Stages:</span>
+                            <span className="text-sm">{formatInterviewStages(experience.interviewStages)}</span>
+                          </div>
+                        )}
+                        
+                        {experience.jobOffered !== null && (
+                          <div>
+                            <span className="text-sm text-gray-600 mr-2">Job Offered:</span>
+                            {getBooleanBadge("Yes", "No", experience.jobOffered)}
+                          </div>
+                        )}
+                        
+                        {experience.ghostJob !== null && (
+                          <div>
+                            <span className="text-sm text-gray-600 mr-2">Ghost Job:</span>
+                            {getBooleanBadge("Yes", "No", experience.ghostJob)}
+                          </div>
+                        )}
+                        
+                        {experience.rejectionFeedback !== null && (
+                          <div>
+                            <span className="text-sm text-gray-600 mr-2">Rejection Feedback:</span>
+                            {getBooleanBadge("Yes", "No", experience.rejectionFeedback)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   
                   {experience.comments && (
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg">

@@ -48,6 +48,11 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Add a simple test endpoint before the catch-all
+  app.get("/test-simple", (req, res) => {
+    res.json({ message: "Simple test endpoint works", timestamp: new Date() });
+  });
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
