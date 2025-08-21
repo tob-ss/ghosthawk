@@ -7,6 +7,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Navigation from "@/components/navigation";
 import { 
   Building, 
   Calendar, 
@@ -14,10 +15,10 @@ import {
   MessageSquare, 
   Star,
   Plus,
-  ArrowLeft,
   CheckCircle,
   XCircle,
-  AlertCircle 
+  AlertCircle,
+  FileText 
 } from "lucide-react";
 
 export default function MyExperiences() {
@@ -90,7 +91,8 @@ export default function MyExperiences() {
   if (isLoading || experiencesLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto p-6">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
             <div className="space-y-4">
@@ -110,67 +112,72 @@ export default function MyExperiences() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto p-6">
+      <Navigation />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">My Experiences</h1>
-            <p className="text-gray-600 mt-1">
-              Track all your recruitment experiences and help build transparency
-            </p>
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <FileText className="h-8 w-8 text-blue-600" />
+            <h1 className="text-4xl font-bold text-gray-900">My Experiences</h1>
           </div>
-          <Link href="/report">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Experience
-            </Button>
-          </Link>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Track all your recruitment experiences and help build transparency in the hiring industry
+          </p>
+          <div className="mt-8">
+            <Link href="/report">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-5 w-5 mr-2" />
+                Add New Experience
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Summary */}
         {userExperiences && userExperiences.length > 0 && (
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <Card>
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
               <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Building className="h-8 w-8 text-blue-500" />
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-600 p-3 rounded-lg">
+                    <Building className="h-6 w-6 text-white" />
+                  </div>
                   <div>
-                    <p className="text-2xl font-bold">{userExperiences.length}</p>
-                    <p className="text-sm text-gray-600">Total Applications</p>
+                    <p className="text-3xl font-bold text-gray-900">{userExperiences.length}</p>
+                    <p className="text-sm font-medium text-gray-600">Total Applications</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
               <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-8 w-8 text-green-500" />
+                <div className="flex items-center gap-4">
+                  <div className="bg-green-600 p-3 rounded-lg">
+                    <CheckCircle className="h-6 w-6 text-white" />
+                  </div>
                   <div>
-                    <p className="text-2xl font-bold">
+                    <p className="text-3xl font-bold text-gray-900">
                       {userExperiences.filter(exp => exp.receivedResponse).length}
                     </p>
-                    <p className="text-sm text-gray-600">Got Responses</p>
+                    <p className="text-sm font-medium text-gray-600">Got Responses</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
               <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Star className="h-8 w-8 text-yellow-500" />
+                <div className="flex items-center gap-4">
+                  <div className="bg-yellow-600 p-3 rounded-lg">
+                    <Star className="h-6 w-6 text-white" />
+                  </div>
                   <div>
-                    <p className="text-2xl font-bold">
+                    <p className="text-3xl font-bold text-gray-900">
                       {Math.round((userExperiences.filter(exp => exp.receivedResponse).length / userExperiences.length) * 100)}%
                     </p>
-                    <p className="text-sm text-gray-600">Response Rate</p>
+                    <p className="text-sm font-medium text-gray-600">Response Rate</p>
                   </div>
                 </div>
               </CardContent>
@@ -181,8 +188,12 @@ export default function MyExperiences() {
         {/* Experiences List */}
         {userExperiences && userExperiences.length > 0 ? (
           <div className="space-y-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Your Experiences</h2>
+              <p className="text-gray-600">Detailed view of all your recruitment interactions</p>
+            </div>
             {userExperiences.map((experience) => (
-              <Card key={experience.id} className="shadow-sm hover:shadow-md transition-shadow">
+              <Card key={experience.id} className="border-0 shadow-lg hover:shadow-xl transition-all duration-200">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -249,16 +260,18 @@ export default function MyExperiences() {
             ))}
           </div>
         ) : (
-          <Card className="text-center py-12">
+          <Card className="border-0 shadow-lg text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100">
             <CardContent>
-              <Building className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Experiences Yet</h3>
-              <p className="text-gray-600 mb-6">
-                Start building your recruitment experience history to help yourself and others make informed decisions.
+              <div className="bg-gray-200 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <FileText className="h-10 w-10 text-gray-500" />
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-900 mb-3">No Experiences Yet</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Start building your recruitment experience history to help yourself and others make informed decisions about employers and recruiters.
               </p>
               <Link href="/report">
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-5 w-5 mr-2" />
                   Report Your First Experience
                 </Button>
               </Link>
