@@ -1,0 +1,56 @@
+What We're Building
+GhostHawk is a transparency platform designed to solve one of the most frustrating aspects of modern job searching: the lack of accountability in the recruitment process. At its core, GhostHawk aims to create a community-driven database that tracks and publicly displays how companies and recruiters actually treat job candidates, moving beyond polished corporate career pages to show the real experience of applying for jobs.
+The Problem We're Solving
+The recruitment industry has significant transparency issues that disadvantage job seekers:
+The "CV Collection" Problem: Many recruiters and companies collect resumes without genuine intent to hire. They use these CVs as "inventory" to appear established to clients, sometimes even selling candidate information to other agencies or marketing companies.
+Ghosting Epidemic: Job seekers frequently experience being "ghosted" - having their applications or interview processes suddenly abandoned without any communication or feedback.
+Information Asymmetry: Job seekers have no reliable way to research which companies or recruiters actually provide good candidate experiences, leading to wasted time and frustration.
+Lack of Accountability: Unlike other service industries where customer reviews create accountability, the recruitment process has no transparent feedback mechanism.
+Our Solution: Comprehensive Hiring Transparency
+GhostHawk addresses these issues by creating a platform that tracks and displays real data about hiring practices across the entire recruitment ecosystem.
+Dual-Channel Approach
+Unlike other platforms that focus solely on external recruiters, GhostHawk tracks both:
+
+External Recruiters and Agencies: Third-party recruiters who reach out to candidates
+Internal Company HR Departments: Direct applications to companies
+
+This comprehensive approach provides job seekers with insights into all possible paths to employment.
+Core Data We Track
+Application Experience Metrics:
+
+Response rates (what percentage of applications get any response)
+Response timeframes (how quickly companies/recruiters typically respond)
+Communication quality (do they provide feedback, updates, or just ghost candidates)
+Interview conversion rates (applications that lead to actual interviews)
+Placement success rates (interviews that result in job offers)
+
+Process Transparency Indicators:
+
+Whether companies/recruiters follow up with rejected candidates
+Frequency of "ghost jobs" (positions that don't actually exist)
+Quality of interview processes and candidate treatment
+Salary transparency and negotiation practices
+
+How It Works
+For Job Seekers (Primary Users)
+Reporting: Users document their experiences through a simple form system:
+
+Company/recruiter contacted
+Position applied for
+Timeline of interactions
+Final outcomes
+Quality of communication received
+
+Discovery: Users can search and filter companies/recruiters by:
+
+Industry and location
+Performance metrics (response rates, placement success)
+Recent candidate experiences
+Salary transparency practices
+
+Insights: Users receive data-driven guidance about:
+
+Which companies are worth their time
+Expected response timeframes
+Comparative hiring practices across similar companies
+Industry benchmarks for recruitment practices
