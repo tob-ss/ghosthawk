@@ -43,7 +43,7 @@ export function SimpleDropdown({ trigger, children, align = "end", className }: 
       {isOpen && (
         <div
           className={cn(
-            "absolute top-full mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+            "absolute top-full mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white/95 p-1 text-gray-900 shadow-md animate-in fade-in-0 zoom-in-95",
             alignmentClasses[align],
             className
           )}

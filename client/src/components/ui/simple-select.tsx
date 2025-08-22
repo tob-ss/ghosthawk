@@ -98,7 +98,7 @@ export function SimpleSelectContent({ children, className }: { children: React.R
   return (
     <div
       className={cn(
-        "absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+        "absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white/95 text-gray-900 shadow-md animate-in fade-in-0 zoom-in-95",
         className
       )}
     >
