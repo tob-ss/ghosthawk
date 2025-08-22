@@ -75,12 +75,6 @@ export default function CompanyCard({ company, compact = false }: CompanyCardPro
                 <h4 className="font-medium text-gray-900 truncate">{company.name}</h4>
                 <div className="flex items-center text-xs text-gray-600">
                   {company.industry && <span>{company.industry}</span>}
-                  {company.location && (
-                    <>
-                      {company.industry && <span className="mx-1">•</span>}
-                      <span className="truncate">{company.location}</span>
-                    </>
-                  )}
                 </div>
               </div>
             </div>

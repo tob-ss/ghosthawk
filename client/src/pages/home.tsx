@@ -31,6 +31,7 @@ export default function Home() {
   });
 
   // Get recommended companies
+  const recommendedCompaniesQuery = "limit=4&sortBy=rating";
   const { data: companiesData } = useQuery<{
     companies: Array<{
       id: string;
@@ -45,7 +46,7 @@ export default function Home() {
     }>;
     total: number;
   }>({
-    queryKey: ["/api/companies/search", { limit: 6, sortBy: "rating" }],
+    queryKey: [`/api/companies/search?${recommendedCompaniesQuery}`],
   });
 
   // Get platform stats
@@ -277,37 +278,21 @@ export default function Home() {
                     Report New Experience
                   </Button>
                 </Link>
-                <Button variant="outline" className="w-full justify-start">
-                  <Building className="h-4 w-4 mr-2" />
-                  Browse Companies
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  View Insights
-                </Button>
+                <Link href="/companies">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Building className="h-4 w-4 mr-2" />
+                    Browse Companies
+                  </Button>
+                </Link>
+                <Link href="/stats">
+                  <Button variant="outline" className="w-full justify-start">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    View Insights
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            {/* Platform Tips */}
-            <Card>
-              <CardHeader>
-                <CardTitle>💡 Tips for Success</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="font-medium text-blue-900">Research First</p>
-                  <p className="text-blue-700">Check company response rates before applying.</p>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="font-medium text-green-900">Share Experiences</p>
-                  <p className="text-green-700">Help others by reporting your recruitment experiences.</p>
-                </div>
-                <div className="p-3 bg-yellow-50 rounded-lg">
-                  <p className="font-medium text-yellow-900">Best Times to Apply</p>
-                  <p className="text-yellow-700">Tuesday-Thursday applications get higher response rates.</p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
