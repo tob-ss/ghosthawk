@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Filter, Building2, Star, TrendingUp, MapPin, Globe, Users, ChevronDown } from "lucide-react";
+import { Search, Filter, Building2, Star, TrendingUp, MapPin, Globe, Users, ChevronDown, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,6 +87,14 @@ export default function CompaniesPage() {
     if (rate >= 70) return "bg-green-100 text-green-800";
     if (rate >= 30) return "bg-yellow-100 text-yellow-800";
     return "bg-red-100 text-red-800";
+  };
+
+  const getGhostJobRisk = (score: number) => {
+    if (score <= 20) return { label: "Very Legitimate", color: "text-green-600", bg: "bg-green-100 text-green-800" };
+    if (score <= 40) return { label: "Mostly Legitimate", color: "text-green-500", bg: "bg-green-100 text-green-700" };
+    if (score <= 60) return { label: "Questionable", color: "text-yellow-600", bg: "bg-yellow-100 text-yellow-800" };
+    if (score <= 80) return { label: "Likely Ghost Jobs", color: "text-orange-600", bg: "bg-orange-100 text-orange-800" };
+    return { label: "High Ghost Risk", color: "text-red-600", bg: "bg-red-100 text-red-800" };
   };
 
   return (
@@ -198,7 +206,7 @@ export default function CompaniesPage() {
                         <SimpleSelectValue />
                       </SimpleSelectTrigger>
                       <SimpleSelectContent>
-                        <SimpleSelectItem value="rating">Highest Rated</SimpleSelectItem>
+                        <SimpleSelectItem value="rating">Lowest Ghost Risk</SimpleSelectItem>
                         <SimpleSelectItem value="response_rate">Response Rate</SimpleSelectItem>
                         <SimpleSelectItem value="recent">Most Recent</SimpleSelectItem>
                       </SimpleSelectContent>
@@ -302,11 +310,11 @@ export default function CompaniesPage() {
                         
                         <div>
                           <div className="flex items-center gap-1 mb-1">
-                            <Star className="h-4 w-4 text-gray-500" />
-                            <span className="text-xs text-gray-500">Rating</span>
+                            <AlertTriangle className="h-4 w-4 text-gray-500" />
+                            <span className="text-xs text-gray-500">Ghost Risk</span>
                           </div>
-                          <div className="text-lg font-semibold">
-                            {company.avgRating.toFixed(1)}/5.0
+                          <div className={`text-lg font-semibold ${getGhostJobRisk(company.avgRating).color}`}>
+                            {company.avgRating}%
                           </div>
                         </div>
                       </div>
@@ -316,9 +324,8 @@ export default function CompaniesPage() {
                           <Users className="h-3 w-3 mr-1" />
                           {company.totalExperiences} experiences
                         </div>
-                        <Badge className={getResponseRateBadge(company.responseRate)}>
-                          {company.responseRate >= 70 ? 'High Response' : 
-                           company.responseRate >= 30 ? 'Medium Response' : 'Low Response'}
+                        <Badge className={getGhostJobRisk(company.avgRating).bg}>
+                          {getGhostJobRisk(company.avgRating).label}
                         </Badge>
                       </div>
 

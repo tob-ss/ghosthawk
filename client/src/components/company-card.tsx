@@ -32,11 +32,12 @@ export default function CompanyCard({ company, compact = false }: CompanyCardPro
     return "bg-red-600";
   };
 
-  const getCommunicationQuality = (rating: number) => {
-    if (rating >= 4.5) return { label: "Excellent", color: "text-green-600" };
-    if (rating >= 3.5) return { label: "Good", color: "text-blue-600" };
-    if (rating >= 2.5) return { label: "Fair", color: "text-yellow-600" };
-    return { label: "Poor", color: "text-red-600" };
+  const getGhostJobRisk = (score: number) => {
+    if (score <= 20) return { label: "Very Legitimate", color: "text-green-600", bgColor: "bg-green-600" };
+    if (score <= 40) return { label: "Mostly Legitimate", color: "text-green-500", bgColor: "bg-green-500" };
+    if (score <= 60) return { label: "Questionable", color: "text-yellow-600", bgColor: "bg-yellow-600" };
+    if (score <= 80) return { label: "Likely Ghost Jobs", color: "text-orange-600", bgColor: "bg-orange-600" };
+    return { label: "High Ghost Risk", color: "text-red-600", bgColor: "bg-red-600" };
   };
 
   const renderStars = (rating: number) => {
@@ -56,7 +57,7 @@ export default function CompanyCard({ company, compact = false }: CompanyCardPro
     return stars;
   };
 
-  const communicationQuality = getCommunicationQuality(company.avgRating);
+  const ghostJobRisk = getGhostJobRisk(company.avgRating);
 
   if (compact) {
     return (
@@ -83,7 +84,9 @@ export default function CompanyCard({ company, compact = false }: CompanyCardPro
               <div className={`font-semibold ${getResponseRateColor(company.responseRate)}`}>
                 {company.responseRate}% response
               </div>
-              <div className="flex">{renderStars(company.avgRating)}</div>
+              <div className={`text-xs px-2 py-1 rounded ${ghostJobRisk.color}`}>
+                {company.avgRating}% ghost risk
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -122,8 +125,9 @@ export default function CompanyCard({ company, compact = false }: CompanyCardPro
           </div>
           <div className="text-right flex-shrink-0">
             <div className="flex items-center text-sm mb-1">
-              <div className="flex mr-1">{renderStars(company.avgRating)}</div>
-              <span className="text-gray-600 ml-1">{company.avgRating}</span>
+              <span className={`text-xs px-2 py-1 rounded ${ghostJobRisk.color}`}>
+                {company.avgRating}% ghost risk
+              </span>
             </div>
             <Badge variant={company.type === "recruiter" ? "outline" : "default"} className="text-xs">
               {company.type === "recruiter" ? "Agency" : "Company"}
@@ -148,15 +152,15 @@ export default function CompanyCard({ company, compact = false }: CompanyCardPro
         
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">Communication Quality</span>
-            <span className={`font-medium ${communicationQuality.color}`}>
-              {communicationQuality.label}
+            <span className="text-gray-600">Ghost Job Risk</span>
+            <span className={`font-medium ${ghostJobRisk.color}`}>
+              {ghostJobRisk.label}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className={`h-2 rounded-full ${getResponseRateBg(company.avgRating * 20)}`}
-              style={{ width: `${(company.avgRating / 5) * 100}%` }}
+              className={`h-2 rounded-full ${ghostJobRisk.bgColor}`}
+              style={{ width: `${company.avgRating}%` }}
             />
           </div>
         </div>

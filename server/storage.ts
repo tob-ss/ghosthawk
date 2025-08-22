@@ -41,6 +41,13 @@ export interface IStorage {
     avgResponseTime: number | null;
     totalExperiences: number;
     communicationBreakdown: Record<string, number>;
+    ghostRating: number;
+    ghostJobReports: number;
+    legitimateJobReports: number;
+    interviewsOffered: number;
+    jobsOffered: number;
+    legitimateJobPercentage: number;
+    goodInterviewOutcomeRatio: number;
   }>;
 
   // Insights operations
@@ -170,6 +177,11 @@ export class DatabaseStorage implements IStorage {
           when ${experiences.communicationQuality} = 'poor' then 2
           else 3
         end)`,
+        // Ghost job algorithm data
+        ghostJobReports: sql<number>`cast(sum(case when ${experiences.ghostJob} = true then 1 else 0 end) as int)`,
+        legitimateJobReports: sql<number>`cast(sum(case when ${experiences.ghostJob} = false then 1 else 0 end) as int)`,
+        interviewsOffered: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true then 1 else 0 end) as int)`,
+        jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
       })
       .from(companies)
       .leftJoin(experiences, and(
@@ -193,11 +205,41 @@ export class DatabaseStorage implements IStorage {
       
       // Will filter by response rate after this calculation
 
+      // Calculate ghost job rating using our algorithm
+      const legitimateJobPercentage = company.totalExperiences > 0 
+        ? (company.legitimateJobReports / company.totalExperiences) * 100 
+        : 0;
+      
+      const goodInterviewOutcomeRatio = company.interviewsOffered > 0
+        ? (company.jobsOffered / company.interviewsOffered) * 100
+        : 0;
+
+      // Ghost Score = (100 - responseRate) * 0.4 + (100 - legitimateJobPercentage) * 0.4 + (100 - goodInterviewOutcomeRatio) * 0.2
+      const ghostScore = Math.round(
+        ((100 - responseRate) * 0.4) + 
+        ((100 - legitimateJobPercentage) * 0.4) + 
+        ((100 - goodInterviewOutcomeRatio) * 0.2)
+      );
+
+      // Debug logging for companies with 100% response rate but showing 40% ghost risk
+      if (responseRate === 100 && ghostScore >= 40) {
+        console.log(`=== DEBUG: ${company.name} (100% response, ${ghostScore}% ghost risk) ===`);
+        console.log(`Response Rate: ${responseRate}%`);
+        console.log(`Legitimate Job Reports: ${company.legitimateJobReports}/${company.totalExperiences} = ${legitimateJobPercentage}%`);
+        console.log(`Interviews Offered: ${company.interviewsOffered}`);
+        console.log(`Jobs Offered: ${company.jobsOffered}`);
+        console.log(`Good Interview Outcome Ratio: ${goodInterviewOutcomeRatio}%`);
+        console.log(`Calculation: ((100 - ${responseRate}) * 0.4) + ((100 - ${legitimateJobPercentage}) * 0.4) + ((100 - ${goodInterviewOutcomeRatio}) * 0.2) = ${ghostScore}`);
+        console.log(`Raw communication score: ${company.communicationScore}`);
+        console.log(`=== END DEBUG ===`);
+      }
+
+
       return {
         ...company,
         responseRate: Math.round(responseRate),
         avgResponseTime: company.avgResponseTimeHours ? Math.round(company.avgResponseTimeHours * 10) / 10 : null,
-        avgRating: Math.round((company.communicationScore || 3) * 100) / 100,
+        avgRating: Math.max(0, Math.min(100, ghostScore)), // Clamp between 0-100
       };
     });
 
@@ -219,7 +261,7 @@ export class DatabaseStorage implements IStorage {
           return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
         case 'rating':
         default:
-          return b.avgRating - a.avgRating;
+          return a.avgRating - b.avgRating; // Lower ghost score is better
       }
     });
 
@@ -336,6 +378,11 @@ export class DatabaseStorage implements IStorage {
         goodCount: sql<number>`cast(sum(case when ${experiences.communicationQuality} = 'good' then 1 else 0 end) as int)`,
         fairCount: sql<number>`cast(sum(case when ${experiences.communicationQuality} = 'fair' then 1 else 0 end) as int)`,
         poorCount: sql<number>`cast(sum(case when ${experiences.communicationQuality} = 'poor' then 1 else 0 end) as int)`,
+        // Ghost job algorithm data
+        ghostJobReports: sql<number>`cast(sum(case when ${experiences.ghostJob} = true then 1 else 0 end) as int)`,
+        legitimateJobReports: sql<number>`cast(sum(case when ${experiences.ghostJob} = false then 1 else 0 end) as int)`,
+        interviewsOffered: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true then 1 else 0 end) as int)`,
+        jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
       })
       .from(experiences)
       .where(and(
@@ -350,6 +397,22 @@ export class DatabaseStorage implements IStorage {
       ? (stats.responseCount / stats.totalExperiences) * 100 
       : 0;
 
+    // Calculate ghost job metrics
+    const legitimateJobPercentage = stats.totalExperiences > 0 
+      ? (stats.legitimateJobReports / stats.totalExperiences) * 100 
+      : 0;
+    
+    const goodInterviewOutcomeRatio = stats.interviewsOffered > 0
+      ? (stats.jobsOffered / stats.interviewsOffered) * 100
+      : 0;
+
+    // Ghost Score = (100 - responseRate) * 0.4 + (100 - legitimateJobPercentage) * 0.4 + (100 - goodInterviewOutcomeRatio) * 0.2
+    const ghostRating = Math.round(
+      ((100 - responseRate) * 0.4) + 
+      ((100 - legitimateJobPercentage) * 0.4) + 
+      ((100 - goodInterviewOutcomeRatio) * 0.2)
+    );
+
     return {
       responseRate: Math.round(responseRate),
       avgResponseTime: stats.avgResponseTimeHours ? Math.round(stats.avgResponseTimeHours * 10) / 10 : null,
@@ -360,6 +423,13 @@ export class DatabaseStorage implements IStorage {
         fair: stats.fairCount,
         poor: stats.poorCount,
       },
+      ghostRating: Math.max(0, Math.min(100, ghostRating)),
+      ghostJobReports: stats.ghostJobReports,
+      legitimateJobReports: stats.legitimateJobReports,
+      interviewsOffered: stats.interviewsOffered,
+      jobsOffered: stats.jobsOffered,
+      legitimateJobPercentage: Math.round(legitimateJobPercentage * 10) / 10,
+      goodInterviewOutcomeRatio: Math.round(goodInterviewOutcomeRatio * 10) / 10,
     };
   }
 

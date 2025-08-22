@@ -124,6 +124,14 @@ export default function CompanyDetail() {
     }
   };
 
+  const getGhostJobRisk = (score: number) => {
+    if (score <= 20) return { label: "Very Legitimate", color: "text-green-600", bgColor: "bg-green-600" };
+    if (score <= 40) return { label: "Mostly Legitimate", color: "text-green-500", bgColor: "bg-green-500" };
+    if (score <= 60) return { label: "Questionable", color: "text-yellow-600", bgColor: "bg-yellow-600" };
+    if (score <= 80) return { label: "Likely Ghost Jobs", color: "text-orange-600", bgColor: "bg-orange-600" };
+    return { label: "High Ghost Risk", color: "text-red-600", bgColor: "bg-red-600" };
+  };
+
   const handleShareExperience = () => {
     if (!isAuthenticated) {
       // Create the report URL with pre-filled company data
@@ -284,6 +292,24 @@ export default function CompanyDetail() {
 
                 <Separator />
 
+                <div className="text-center">
+                  <div className={`text-3xl font-bold ${getGhostJobRisk(company.stats.ghostRating).color}`}>
+                    {company.stats.ghostRating}%
+                  </div>
+                  <div className="text-sm text-gray-600">Ghost Job Risk</div>
+                  <div className={`text-xs mt-1 ${getGhostJobRisk(company.stats.ghostRating).color}`}>
+                    {getGhostJobRisk(company.stats.ghostRating).label}
+                  </div>
+                  <Progress 
+                    value={company.stats.ghostRating} 
+                    className="mt-2"
+                    // @ts-ignore
+                    style={{"--progress-background": getGhostJobRisk(company.stats.ghostRating).bgColor.replace("bg-", "")}}
+                  />
+                </div>
+
+                <Separator />
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <div className="text-lg font-semibold text-gray-900">
@@ -299,35 +325,64 @@ export default function CompanyDetail() {
               </CardContent>
             </Card>
 
-            {/* Communication Breakdown */}
+            {/* Ghost Risk Transparency */}
             <Card>
               <CardHeader>
-                <CardTitle>Communication Quality</CardTitle>
+                <CardTitle>Ghost Risk Analysis</CardTitle>
+                <p className="text-sm text-gray-600">How the {company.stats.ghostRating}% ghost risk score is calculated</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {Object.entries(company.stats.communicationBreakdown).map(([quality, count]) => (
-                    <div key={quality} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 capitalize">{quality}</span>
+                <div className="space-y-4">
+                  <div className="text-xs text-gray-500 mb-3">
+                    Formula: (100 - Response Rate) × 40% + (100 - Confirmed Legitimate Jobs) × 40% + (100 - Good Interview Outcomes) × 20%
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Response Rate Impact</span>
                       <div className="flex items-center space-x-2">
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full ${
-                              quality === "excellent" ? "bg-green-500" :
-                              quality === "good" ? "bg-blue-500" :
-                              quality === "fair" ? "bg-yellow-500" : "bg-red-500"
-                            }`}
-                            style={{ 
-                              width: company.stats.totalExperiences > 0 
-                                ? `${(count / company.stats.totalExperiences) * 100}%` 
-                                : "0%" 
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900">{count}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {Math.round((100 - company.stats.responseRate) * 0.4)}%
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ((100 - {company.stats.responseRate}) × 40%)
+                        </span>
                       </div>
                     </div>
-                  ))}
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Job Legitimacy Impact</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {Math.round((100 - company.stats.legitimateJobPercentage) * 0.4)}%
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({company.stats.legitimateJobReports}/{company.stats.totalExperiences} confirmed legitimate → {Math.round((100 - company.stats.legitimateJobPercentage) * 0.4)}%)
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Interview Success Impact</span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {Math.round((100 - company.stats.goodInterviewOutcomeRatio) * 0.2)}%
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({company.stats.interviewsOffered > 0 ? `${company.stats.jobsOffered}/${company.stats.interviewsOffered}` : '0/0'} success → {Math.round((100 - company.stats.goodInterviewOutcomeRatio) * 0.2)}%)
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t pt-2 mt-3">
+                      <div className="flex items-center justify-between font-semibold">
+                        <span className="text-sm">Total Ghost Risk Score</span>
+                        <span className={`text-sm ${getGhostJobRisk(company.stats.ghostRating).color}`}>
+                          {company.stats.ghostRating}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
