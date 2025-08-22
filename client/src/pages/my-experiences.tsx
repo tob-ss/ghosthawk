@@ -161,56 +161,6 @@ export default function MyExperiences() {
           )}
         </div>
 
-        {/* Stats Summary */}
-        {userExperiences && userExperiences.length > 0 && (
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-blue-600 p-3 rounded-lg">
-                    <Building className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">{userExperiences.length}</p>
-                    <p className="text-sm font-medium text-gray-600">Total Applications</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-green-600 p-3 rounded-lg">
-                    <CheckCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {userExperiences.filter(exp => exp.receivedResponse).length}
-                    </p>
-                    <p className="text-sm font-medium text-gray-600">Got Responses</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-yellow-600 p-3 rounded-lg">
-                    <Star className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {Math.round((userExperiences.filter(exp => exp.receivedResponse).length / userExperiences.length) * 100)}%
-                    </p>
-                    <p className="text-sm font-medium text-gray-600">Response Rate</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Experiences List */}
         {userExperiences && userExperiences.length > 0 ? (

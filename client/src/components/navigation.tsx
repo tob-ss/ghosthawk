@@ -27,8 +27,7 @@ export default function Navigation() {
   ];
 
   const authenticatedNavigation = [
-    { name: "Home", href: "/landing" },
-    { name: "Dashboard", href: "/" },
+    { name: "Home", href: "/" },
     { name: "Companies", href: "/companies" },
     { name: hasExperiences ? "Report Experience" : "Report Your First Experience", href: "/report" },
     { name: "My Experiences", href: "/my-experiences" },
