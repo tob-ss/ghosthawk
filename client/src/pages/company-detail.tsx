@@ -44,6 +44,37 @@ export default function CompanyDetail() {
     enabled: !!id,
   });
 
+  // Get user's experiences for this specific company
+  const { data: userExperiences } = useQuery<Array<{
+    id: string;
+    position?: string;
+    applicationDate: string;
+    receivedResponse: boolean;
+    responseTime?: string;
+    communicationQuality?: string;
+    interviewOffered?: boolean | null;
+    interviewStages?: string | null;
+    jobOffered?: boolean | null;
+    ghostJob?: boolean | null;
+    rejectionFeedback?: boolean | null;
+    comments?: string;
+    createdAt: string;
+    company: {
+      id: string;
+      name: string;
+      type: string;
+      industry?: string;
+    } | null;
+  }>>({
+    queryKey: ["/api/experiences/user"],
+    enabled: isAuthenticated,
+  });
+
+  // Filter user's experiences for this specific company
+  const userExperienceForCompany = userExperiences?.find(exp => 
+    exp.company?.id === id
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -210,6 +241,86 @@ export default function CompanyDetail() {
               </CardContent>
             </Card>
 
+            {/* Your Experience */}
+            {isAuthenticated && userExperienceForCompany && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-blue-600">Your Experience</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="border rounded-lg p-4 bg-blue-50 border-blue-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        {userExperienceForCompany.position && (
+                          <h4 className="font-medium text-gray-900">{userExperienceForCompany.position}</h4>
+                        )}
+                        <p className="text-sm text-gray-600">
+                          Applied {new Date(userExperienceForCompany.applicationDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={userExperienceForCompany.receivedResponse ? "default" : "destructive"}>
+                          {userExperienceForCompany.receivedResponse ? "Responded" : "No Response"}
+                        </Badge>
+                        {userExperienceForCompany.responseTime && userExperienceForCompany.receivedResponse && (
+                          <Badge variant="outline">
+                            {userExperienceForCompany.responseTime.replace(/_/g, ' ')}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {userExperienceForCompany.communicationQuality && userExperienceForCompany.receivedResponse && (
+                      <div className="mb-3">
+                        <span className="text-sm text-gray-600">Communication Quality: </span>
+                        <span className={`text-sm font-medium ${getCommunicationQualityColor(userExperienceForCompany.communicationQuality)}`}>
+                          {userExperienceForCompany.communicationQuality.charAt(0).toUpperCase() + userExperienceForCompany.communicationQuality.slice(1)}
+                        </span>
+                      </div>
+                    )}
+
+                    {userExperienceForCompany.interviewOffered !== null && (
+                      <div className="mb-3">
+                        <span className="text-sm text-gray-600">Interview Offered: </span>
+                        <span className="text-sm font-medium">
+                          {userExperienceForCompany.interviewOffered ? "Yes" : "No"}
+                        </span>
+                        {userExperienceForCompany.interviewOffered && userExperienceForCompany.interviewStages && (
+                          <span className="text-sm text-gray-600 ml-2">
+                            ({userExperienceForCompany.interviewStages.replace(/_/g, ' ')})
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {userExperienceForCompany.jobOffered !== null && (
+                      <div className="mb-3">
+                        <span className="text-sm text-gray-600">Job Offered: </span>
+                        <span className="text-sm font-medium">
+                          {userExperienceForCompany.jobOffered ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    )}
+
+                    {userExperienceForCompany.ghostJob !== null && (
+                      <div className="mb-3">
+                        <span className="text-sm text-gray-600">Ghost Job: </span>
+                        <span className={`text-sm font-medium ${userExperienceForCompany.ghostJob ? "text-red-600" : "text-green-600"}`}>
+                          {userExperienceForCompany.ghostJob ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {userExperienceForCompany.comments && (
+                      <div>
+                        <p className="text-sm text-gray-700 italic">"{userExperienceForCompany.comments}"</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Candidate Experiences */}
             <Card>
               <CardHeader>
@@ -271,6 +382,27 @@ export default function CompanyDetail() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full" onClick={handleShareExperience}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Share Your Experience
+                </Button>
+                <Button variant="outline" className="w-full">
+                  <Star className="h-4 w-4 mr-2" />
+                  Save Company
+                </Button>
+                <Button variant="outline" className="w-full">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  View Similar Companies
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Key Metrics */}
             <Card>
               <CardHeader>
@@ -387,26 +519,6 @@ export default function CompanyDetail() {
               </CardContent>
             </Card>
 
-            {/* Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full" onClick={handleShareExperience}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Share Your Experience
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <Star className="h-4 w-4 mr-2" />
-                  Save Company
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  View Similar Companies
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
