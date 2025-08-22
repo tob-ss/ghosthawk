@@ -349,13 +349,7 @@ export class DatabaseStorage implements IStorage {
         jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
       })
       .from(experiences)
-      .where(and(
-        eq(experiences.companyId, companyId),
-        or(
-          eq(experiences.isAnonymous, false),
-          sql`${experiences.userId} IS NULL`
-        )
-      ));
+      .where(eq(experiences.companyId, companyId));
 
     const responseRate = stats.totalExperiences > 0 
       ? (stats.responseCount / stats.totalExperiences) * 100 

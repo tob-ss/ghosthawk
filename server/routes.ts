@@ -68,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         ...company,
         stats,
-        experiences: experiences.filter(exp => !exp.isAnonymous || !exp.userId).map(exp => ({
+        experiences: experiences.map(exp => ({
           id: exp.id,
           position: exp.position,
           applicationDate: exp.applicationDate,

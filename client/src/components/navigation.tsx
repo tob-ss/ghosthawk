@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Search, Menu, X, User, LogOut, FileText } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SimpleDropdown, SimpleDropdownItem, SimpleDropdownSeparator } from "@/components/ui/simple-dropdown";
@@ -12,9 +13,16 @@ export default function Navigation() {
   const { user, isAuthenticated } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Get user's experiences to determine navigation text
+  const { data: userExperiences } = useQuery<Array<any>>({
+    queryKey: ["/api/experiences/user"],
+    enabled: isAuthenticated,
+  });
+
+  const hasExperiences = userExperiences && userExperiences.length > 0;
+
   const navigation = [
     { name: "Companies", href: "/companies" },
-    { name: "Industry Insights", href: "/#insights" },
     { name: "Platform Stats", href: "/stats" },
   ];
 
@@ -22,7 +30,7 @@ export default function Navigation() {
     { name: "Home", href: "/landing" },
     { name: "Dashboard", href: "/" },
     { name: "Companies", href: "/companies" },
-    { name: "Report Experience", href: "/report" },
+    { name: hasExperiences ? "Report Experience" : "Report Your First Experience", href: "/report" },
     { name: "My Experiences", href: "/my-experiences" },
     { name: "Platform Stats", href: "/stats" },
   ];

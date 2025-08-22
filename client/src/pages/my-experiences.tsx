@@ -149,14 +149,16 @@ export default function MyExperiences() {
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Track all your recruitment experiences and help build transparency in the hiring industry
           </p>
-          <div className="mt-8">
-            <Link href="/report">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-5 w-5 mr-2" />
-                Add New Experience
-              </Button>
-            </Link>
-          </div>
+          {userExperiences && userExperiences.length > 0 && (
+            <div className="mt-8">
+              <Link href="/report">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add New Experience
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Stats Summary */}

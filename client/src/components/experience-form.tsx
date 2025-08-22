@@ -108,9 +108,14 @@ export default function ExperienceForm({
       });
       setShowResponseDetails(false);
       setShowInterviewDetails(false);
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["/api/companies/search"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/experiences/user"] });
+      // Invalidate all relevant queries to refresh data across the app
+      queryClient.invalidateQueries({ predicate: (query) => {
+        const queryKeyString = JSON.stringify(query.queryKey);
+        return queryKeyString.includes("/api/companies") || 
+               queryKeyString.includes("/api/stats") || 
+               queryKeyString.includes("/api/insights") ||
+               queryKeyString.includes("/api/experiences");
+      }});
     },
     onError: (error) => {
       if (isUnauthorizedError(error as Error)) {
