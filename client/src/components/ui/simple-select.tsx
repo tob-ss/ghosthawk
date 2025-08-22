@@ -21,6 +21,8 @@ const SimpleSelectContext = React.createContext<{
   onValueChange?: (value: string) => void;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  selectedLabel?: string;
+  setSelectedLabel?: (label: string) => void;
 }>({
   isOpen: false,
   setIsOpen: () => {},
@@ -28,6 +30,7 @@ const SimpleSelectContext = React.createContext<{
 
 export function SimpleSelect({ value, onValueChange, placeholder, children, className }: SimpleSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedLabel, setSelectedLabel] = React.useState<string>("");
   const selectRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -46,11 +49,21 @@ export function SimpleSelect({ value, onValueChange, placeholder, children, clas
     };
   }, [isOpen]);
 
+  // Update selected label when value changes from external source
+  React.useEffect(() => {
+    if (value && !selectedLabel) {
+      // This will be set when the matching SimpleSelectItem renders
+      setSelectedLabel("");
+    }
+  }, [value]);
+
   const contextValue = {
     value,
     onValueChange,
     isOpen,
     setIsOpen,
+    selectedLabel,
+    setSelectedLabel,
   };
 
   return (
@@ -81,11 +94,11 @@ export function SimpleSelectTrigger({ children, className }: { children: React.R
 }
 
 export function SimpleSelectValue({ placeholder }: { placeholder?: string }) {
-  const { value } = React.useContext(SimpleSelectContext);
+  const { value, selectedLabel } = React.useContext(SimpleSelectContext);
   
   return (
     <span className={cn("block truncate", !value && "text-muted-foreground")}>
-      {value || placeholder}
+      {selectedLabel || value || placeholder}
     </span>
   );
 }
@@ -108,10 +121,18 @@ export function SimpleSelectContent({ children, className }: { children: React.R
 }
 
 export function SimpleSelectItem({ value, children, className }: SimpleSelectItemProps) {
-  const { onValueChange, setIsOpen } = React.useContext(SimpleSelectContext);
+  const { value: selectedValue, onValueChange, setIsOpen, setSelectedLabel } = React.useContext(SimpleSelectContext);
+
+  // Register this item's label if it matches the current value
+  React.useEffect(() => {
+    if (selectedValue === value && setSelectedLabel) {
+      setSelectedLabel(typeof children === 'string' ? children : value);
+    }
+  }, [selectedValue, value, children, setSelectedLabel]);
 
   const handleClick = () => {
     onValueChange?.(value);
+    setSelectedLabel?.(typeof children === 'string' ? children : value);
     setIsOpen(false);
   };
 
