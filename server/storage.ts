@@ -62,6 +62,12 @@ export interface IStorage {
     responseTimeBreakdown: Record<string, number>;
     companyTypeStats: Record<string, { count: number; avgResponseRate: number }>;
     monthlyTrends: { month: string; companies: number; experiences: number; responseRate: number }[];
+    interviewStats: {
+      interviewOfferRate: number;
+      interviewToJobRate: number;
+      interviewStagesBreakdown: Record<string, number>;
+      industryInterviewRates: Record<string, number>;
+    };
   }>;
 }
 
@@ -166,7 +172,13 @@ export class DatabaseStorage implements IStorage {
         end)`,
       })
       .from(companies)
-      .leftJoin(experiences, eq(companies.id, experiences.companyId))
+      .leftJoin(experiences, and(
+        eq(companies.id, experiences.companyId),
+        or(
+          eq(experiences.isAnonymous, false),
+          sql`${experiences.userId} IS NULL`
+        )
+      ))
       .where(whereClause)
       .groupBy(companies.id)
       .having(sql`count(${experiences.id}) > 0`)
@@ -184,10 +196,13 @@ export class DatabaseStorage implements IStorage {
       return {
         ...company,
         responseRate: Math.round(responseRate),
-        avgResponseTime: company.avgResponseTimeHours || null,
+        avgResponseTime: company.avgResponseTimeHours ? Math.round(company.avgResponseTimeHours * 10) / 10 : null,
         avgRating: Math.round((company.communicationScore || 3) * 100) / 100,
       };
-    }).filter(company => {
+    });
+
+    // Apply response rate filtering  
+    const filteredCompanies = companiesWithMetrics.filter(company => {
       if (!responseRate) return true;
       if (responseRate === 'high') return company.responseRate >= 70;
       if (responseRate === 'medium') return company.responseRate >= 30 && company.responseRate < 70;
@@ -196,7 +211,7 @@ export class DatabaseStorage implements IStorage {
     });
 
     // Sort results
-    companiesWithMetrics.sort((a, b) => {
+    filteredCompanies.sort((a, b) => {
       switch (sortBy) {
         case 'response_rate':
           return b.responseRate - a.responseRate;
@@ -208,22 +223,41 @@ export class DatabaseStorage implements IStorage {
       }
     });
 
-    // Get total count - count distinct companies that have experiences
-    const totalCountResult = await db
-      .select({ 
-        companyId: companies.id,
-        experienceCount: sql<number>`cast(count(${experiences.id}) as int)`
+    // Get total count of ALL filtered companies (not just current page)
+    // We need to run the same query without pagination to get accurate count
+    const allCompaniesWithStats = await db
+      .select({
+        id: companies.id,
+        totalExperiences: sql<number>`cast(count(${experiences.id}) as int)`,
+        responseCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
       })
       .from(companies)
-      .leftJoin(experiences, eq(companies.id, experiences.companyId))
+      .leftJoin(experiences, and(
+        eq(companies.id, experiences.companyId),
+        or(
+          eq(experiences.isAnonymous, false),
+          sql`${experiences.userId} IS NULL`
+        )
+      ))
       .where(whereClause)
       .groupBy(companies.id)
       .having(sql`count(${experiences.id}) > 0`);
-    
-    const totalCount = totalCountResult.length;
+
+    // Apply the same response rate filtering to get accurate total count
+    const totalCount = allCompaniesWithStats.filter(company => {
+      const responseRateCalc = company.totalExperiences > 0 
+        ? Math.round((company.responseCount / company.totalExperiences) * 100)
+        : 0;
+      
+      if (!responseRate) return true;
+      if (responseRate === 'high') return responseRateCalc >= 70;
+      if (responseRate === 'medium') return responseRateCalc >= 30 && responseRateCalc < 70;
+      if (responseRate === 'low') return responseRateCalc < 30;
+      return true;
+    }).length;
 
     return {
-      companies: companiesWithMetrics,
+      companies: filteredCompanies,
       total: totalCount,
     };
   }
@@ -304,7 +338,13 @@ export class DatabaseStorage implements IStorage {
         poorCount: sql<number>`cast(sum(case when ${experiences.communicationQuality} = 'poor' then 1 else 0 end) as int)`,
       })
       .from(experiences)
-      .where(eq(experiences.companyId, companyId));
+      .where(and(
+        eq(experiences.companyId, companyId),
+        or(
+          eq(experiences.isAnonymous, false),
+          sql`${experiences.userId} IS NULL`
+        )
+      ));
 
     const responseRate = stats.totalExperiences > 0 
       ? (stats.responseCount / stats.totalExperiences) * 100 
@@ -312,7 +352,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       responseRate: Math.round(responseRate),
-      avgResponseTime: stats.avgResponseTimeHours || null,
+      avgResponseTime: stats.avgResponseTimeHours ? Math.round(stats.avgResponseTimeHours * 10) / 10 : null,
       totalExperiences: stats.totalExperiences,
       communicationBreakdown: {
         excellent: stats.excellentCount,
@@ -496,11 +536,75 @@ export class DatabaseStorage implements IStorage {
         : 0,
     }));
 
+    // Calculate interview statistics
+    const [interviewStatsData] = await db
+      .select({
+        totalExperiences: sql<number>`cast(count(*) as int)`,
+        interviewsOffered: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true then 1 else 0 end) as int)`,
+        jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
+        interviewsToJobs: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true and ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
+      })
+      .from(experiences);
+
+    const interviewOfferRate = interviewStatsData.totalExperiences > 0 
+      ? Math.round((interviewStatsData.interviewsOffered / interviewStatsData.totalExperiences) * 100)
+      : 0;
+
+    const interviewToJobRate = interviewStatsData.interviewsOffered > 0 
+      ? Math.round((interviewStatsData.interviewsToJobs / interviewStatsData.interviewsOffered) * 100)
+      : 0;
+
+    // Get interview stages breakdown
+    const interviewStagesData = await db
+      .select({
+        stages: experiences.interviewStages,
+        count: sql<number>`cast(count(*) as int)`,
+      })
+      .from(experiences)
+      .where(sql`${experiences.interviewStages} IS NOT NULL`)
+      .groupBy(experiences.interviewStages);
+
+    const interviewStagesBreakdown: Record<string, number> = {};
+    interviewStagesData.forEach(item => {
+      if (item.stages) {
+        // Split comma-separated stages and count each individually
+        const stages = item.stages.split(',').map(s => s.trim());
+        stages.forEach(stage => {
+          interviewStagesBreakdown[stage] = (interviewStagesBreakdown[stage] || 0) + item.count;
+        });
+      }
+    });
+
+    // Get interview rates by industry
+    const industryInterviewData = await db
+      .select({
+        industry: companies.industry,
+        totalExperiences: sql<number>`cast(count(${experiences.id}) as int)`,
+        interviewsOffered: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true then 1 else 0 end) as int)`,
+      })
+      .from(experiences)
+      .leftJoin(companies, eq(experiences.companyId, companies.id))
+      .where(sql`${companies.industry} IS NOT NULL`)
+      .groupBy(companies.industry);
+
+    const industryInterviewRates: Record<string, number> = {};
+    industryInterviewData.forEach(item => {
+      if (item.industry && item.totalExperiences > 0) {
+        industryInterviewRates[item.industry] = Math.round((item.interviewsOffered / item.totalExperiences) * 100);
+      }
+    });
+
     return {
       communicationBreakdown,
       responseTimeBreakdown,
       companyTypeStats,
       monthlyTrends,
+      interviewStats: {
+        interviewOfferRate,
+        interviewToJobRate,
+        interviewStagesBreakdown,
+        industryInterviewRates,
+      },
     };
   }
 }

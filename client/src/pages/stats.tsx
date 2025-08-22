@@ -45,6 +45,12 @@ interface DetailedStatsData {
   responseTimeBreakdown: Record<string, number>;
   companyTypeStats: Record<string, { count: number; avgResponseRate: number }>;
   monthlyTrends: { month: string; companies: number; experiences: number; responseRate: number }[];
+  interviewStats: {
+    interviewOfferRate: number;
+    interviewToJobRate: number;
+    interviewStagesBreakdown: Record<string, number>;
+    industryInterviewRates: Record<string, number>;
+  };
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -108,6 +114,28 @@ export default function StatsPage() {
       responseRate: stats.avgResponseRate
     })) : [];
 
+  const interviewStagesData = detailedStats?.interviewStats?.interviewStagesBreakdown ?
+    Object.entries(detailedStats.interviewStats.interviewStagesBreakdown).map(([stage, count]) => {
+      const stageNames: Record<string, string> = {
+        phone: 'Phone Interview',
+        video: 'Video Interview', 
+        technical: 'Technical Interview',
+        onsite: 'Onsite Interview',
+        panel: 'Panel Interview',
+        multiple: 'Multiple Rounds'
+      };
+      return {
+        name: stageNames[stage] || stage,
+        value: count
+      };
+    }) : [];
+
+  const industryInterviewData = detailedStats?.interviewStats?.industryInterviewRates ?
+    Object.entries(detailedStats.interviewStats.industryInterviewRates).map(([industry, rate]) => ({
+      industry: industry.charAt(0).toUpperCase() + industry.slice(1),
+      interviewRate: rate
+    })) : [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -163,6 +191,46 @@ export default function StatsPage() {
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Interview Statistics */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
+            <Users className="h-6 w-6 mr-2 text-blue-600" />
+            Interview Statistics
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Interview Offer Rate</CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {detailedStats?.interviewStats?.interviewOfferRate ?? 0}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Of all applications get interviews
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Interview Success Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {detailedStats?.interviewStats?.interviewToJobRate ?? 0}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Of interviews lead to job offers
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -251,6 +319,79 @@ export default function StatsPage() {
                     <span>Poor</span>
                     <Badge variant="outline">15%</Badge>
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Interview Analytics Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Interview Stages Breakdown */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Activity className="h-5 w-5 mr-2" />
+                Interview Stages Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {interviewStagesData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={interviewStagesData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {interviewStagesData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-gray-500 py-12">
+                  No interview stage data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Industry Interview Rates */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Interview Rates by Industry
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {industryInterviewData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={industryInterviewData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="industry" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => [`${value}%`, 'Interview Rate']}
+                    />
+                    <Bar dataKey="interviewRate" fill="#4F46E5" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-gray-500 py-12">
+                  No industry interview data available
                 </div>
               )}
             </CardContent>
