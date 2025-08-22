@@ -1,4 +1,4 @@
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Building, MapPin, Globe, Star, TrendingUp, MessageSquare, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CompanyDetail() {
   const { id } = useParams();
+  const [, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
   
   const { data: company, isLoading, error } = useQuery<{
     id: string;
@@ -121,6 +124,21 @@ export default function CompanyDetail() {
     }
   };
 
+  const handleShareExperience = () => {
+    if (!isAuthenticated) {
+      // Redirect to login
+      window.location.href = "/api/login";
+    } else {
+      // Redirect to report experience with pre-filled company data
+      const params = new URLSearchParams();
+      if (company?.name) params.set('company', company.name);
+      if (company?.type) params.set('type', company.type);
+      if (company?.industry) params.set('industry', company.industry.toLowerCase());
+      
+      setLocation(`/report?${params.toString()}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -159,24 +177,12 @@ export default function CompanyDetail() {
                             <Badge variant="secondary">{company.industry}</Badge>
                           </span>
                         )}
-                        {company.location && (
-                          <span className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {company.location}
-                          </span>
-                        )}
                         <Badge variant={company.type === "recruiter" ? "outline" : "default"}>
                           {company.type === "recruiter" ? "Recruitment Agency" : "Direct Company"}
                         </Badge>
                       </div>
                     </div>
                   </div>
-                  {company.website && (
-                    <Button variant="outline" size="sm">
-                      <Globe className="h-4 w-4 mr-2" />
-                      Website
-                    </Button>
-                  )}
                 </div>
 
                 {company.description && (
@@ -324,7 +330,7 @@ export default function CompanyDetail() {
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full">
+                <Button className="w-full" onClick={handleShareExperience}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Share Your Experience
                 </Button>

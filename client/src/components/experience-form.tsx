@@ -14,15 +14,52 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, Loader2 } from "lucide-react";
 
-export default function ExperienceForm() {
+interface ExperienceFormProps {
+  initialCompanyName?: string;
+  initialCompanyType?: string;
+  initialCompanyIndustry?: string;
+}
+
+export default function ExperienceForm({ 
+  initialCompanyName = "",
+  initialCompanyType = "",
+  initialCompanyIndustry = ""
+}: ExperienceFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Map values to display labels for pre-filled dropdowns
+  const getCompanyTypeDisplay = (value: string) => {
+    switch (value) {
+      case 'company': return 'Direct Company Application';
+      case 'recruiter': return 'External Recruiter/Agency';
+      default: return value;
+    }
+  };
+
+  const getIndustryDisplay = (value: string) => {
+    const industryMap: Record<string, string> = {
+      'technology': 'Technology',
+      'finance': 'Finance', 
+      'healthcare': 'Healthcare',
+      'marketing': 'Marketing',
+      'manufacturing': 'Manufacturing',
+      'education': 'Education',
+      'retail': 'Retail',
+      'consulting': 'Consulting',
+      'media': 'Media & Entertainment',
+      'nonprofit': 'Non-Profit',
+      'government': 'Government',
+      'other': 'Other'
+    };
+    return industryMap[value] || value;
+  };
+
   const [formData, setFormData] = useState({
-    companyName: "",
-    companyType: "",
-    companyIndustry: "",
+    companyName: initialCompanyName,
+    companyType: initialCompanyType,
+    companyIndustry: initialCompanyIndustry,
     position: "",
     applicationDate: "",
     receivedResponse: "",
@@ -229,6 +266,13 @@ export default function ExperienceForm() {
                   <SimpleSelectItem value="finance">Finance</SimpleSelectItem>
                   <SimpleSelectItem value="healthcare">Healthcare</SimpleSelectItem>
                   <SimpleSelectItem value="marketing">Marketing</SimpleSelectItem>
+                  <SimpleSelectItem value="manufacturing">Manufacturing</SimpleSelectItem>
+                  <SimpleSelectItem value="consulting">Consulting</SimpleSelectItem>
+                  <SimpleSelectItem value="education">Education</SimpleSelectItem>
+                  <SimpleSelectItem value="retail">Retail</SimpleSelectItem>
+                  <SimpleSelectItem value="media">Media & Entertainment</SimpleSelectItem>
+                  <SimpleSelectItem value="nonprofit">Non-Profit</SimpleSelectItem>
+                  <SimpleSelectItem value="government">Government</SimpleSelectItem>
                   <SimpleSelectItem value="other">Other</SimpleSelectItem>
                 </SimpleSelectContent>
               </SimpleSelect>

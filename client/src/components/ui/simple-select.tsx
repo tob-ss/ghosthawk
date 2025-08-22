@@ -49,10 +49,9 @@ export function SimpleSelect({ value, onValueChange, placeholder, children, clas
     };
   }, [isOpen]);
 
-  // Update selected label when value changes from external source
+  // Reset selected label when value changes from external source
   React.useEffect(() => {
-    if (value && !selectedLabel) {
-      // This will be set when the matching SimpleSelectItem renders
+    if (!value) {
       setSelectedLabel("");
     }
   }, [value]);
@@ -106,17 +105,25 @@ export function SimpleSelectValue({ placeholder }: { placeholder?: string }) {
 export function SimpleSelectContent({ children, className }: { children: React.ReactNode; className?: string }) {
   const { isOpen } = React.useContext(SimpleSelectContext);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className={cn(
-        "absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white/95 text-gray-900 shadow-md animate-in fade-in-0 zoom-in-95",
-        className
+    <>
+      {/* Always render children invisibly to allow label registration */}
+      <div style={{ display: 'none' }}>
+        {children}
+      </div>
+      
+      {/* Visible dropdown when open */}
+      {isOpen && (
+        <div
+          className={cn(
+            "absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border bg-white/95 text-gray-900 shadow-md animate-in fade-in-0 zoom-in-95",
+            className
+          )}
+        >
+          {children}
+        </div>
       )}
-    >
-      {children}
-    </div>
+    </>
   );
 }
 

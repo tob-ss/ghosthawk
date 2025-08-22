@@ -278,12 +278,6 @@ export default function CompaniesPage() {
                               <Badge variant="secondary">{company.industry}</Badge>
                             )}
                           </div>
-                          {company.location && (
-                            <div className="flex items-center text-sm text-gray-600 mb-2">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {company.location}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </CardHeader>
@@ -328,12 +322,6 @@ export default function CompaniesPage() {
                         </Badge>
                       </div>
 
-                      {company.website && (
-                        <div className="flex items-center text-xs text-blue-600 mt-2">
-                          <Globe className="h-3 w-3 mr-1" />
-                          Website
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </Link>

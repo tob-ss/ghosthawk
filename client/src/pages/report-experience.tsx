@@ -19,6 +19,12 @@ import ExperienceForm from "@/components/experience-form";
 export default function ReportExperience() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  
+  // Get company data from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefilledCompanyName = urlParams.get('company') || '';
+  const prefilledCompanyType = urlParams.get('type') || '';
+  const prefilledCompanyIndustry = urlParams.get('industry') || '';
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -90,7 +96,11 @@ export default function ReportExperience() {
           </CardContent>
         </Card>
 
-        <ExperienceForm />
+        <ExperienceForm 
+          initialCompanyName={prefilledCompanyName}
+          initialCompanyType={prefilledCompanyType}
+          initialCompanyIndustry={prefilledCompanyIndustry}
+        />
       </div>
     </div>
   );
