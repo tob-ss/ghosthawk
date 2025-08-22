@@ -169,9 +169,11 @@ export default function ExperienceForm({
   };
 
   const handleResponseChange = (value: string) => {
-    setFormData(prev => ({ ...prev, receivedResponse: value }));
-    setShowResponseDetails(value === "yes");
-    if (value !== "yes") {
+    // Toggle off if same value is clicked
+    const newValue = formData.receivedResponse === value ? "" : value;
+    setFormData(prev => ({ ...prev, receivedResponse: newValue }));
+    setShowResponseDetails(newValue === "yes");
+    if (newValue !== "yes") {
       setFormData(prev => ({ 
         ...prev, 
         responseTime: "", 
@@ -185,15 +187,41 @@ export default function ExperienceForm({
   };
 
   const handleInterviewChange = (value: string) => {
-    setFormData(prev => ({ ...prev, interviewOffered: value }));
-    setShowInterviewDetails(value === "yes");
-    if (value !== "yes") {
+    // Toggle off if same value is clicked
+    const newValue = formData.interviewOffered === value ? "" : value;
+    setFormData(prev => ({ ...prev, interviewOffered: newValue }));
+    setShowInterviewDetails(newValue === "yes");
+    if (newValue !== "yes") {
       setFormData(prev => ({ 
         ...prev, 
         interviewStages: "",
         jobOffered: ""
       }));
     }
+  };
+
+  const handleCommunicationChange = (value: string) => {
+    // Toggle off if same value is clicked
+    const newValue = formData.communicationQuality === value ? "" : value;
+    setFormData(prev => ({ ...prev, communicationQuality: newValue }));
+  };
+
+  const handleJobOfferChange = (value: string) => {
+    // Toggle off if same value is clicked
+    const newValue = formData.jobOffered === value ? "" : value;
+    setFormData(prev => ({ ...prev, jobOffered: newValue }));
+  };
+
+  const handleGhostJobChange = (value: string) => {
+    // Toggle off if same value is clicked
+    const newValue = formData.ghostJob === value ? "" : value;
+    setFormData(prev => ({ ...prev, ghostJob: newValue }));
+  };
+
+  const handleRejectionFeedbackChange = (value: string) => {
+    // Toggle off if same value is clicked
+    const newValue = formData.rejectionFeedback === value ? "" : value;
+    setFormData(prev => ({ ...prev, rejectionFeedback: newValue }));
   };
 
   return (
@@ -297,30 +325,36 @@ export default function ExperienceForm({
             <Label className="text-sm font-medium text-gray-700 block mb-3">
               Did you receive a response? *
             </Label>
-            <RadioGroup 
-              value={formData.receivedResponse} 
-              onValueChange={handleResponseChange}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            >
-              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value="yes" id="response-yes" />
-                <Label htmlFor="response-yes" className="flex-1 cursor-pointer">
-                  Yes, they responded
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value="no" id="response-no" />
-                <Label htmlFor="response-no" className="flex-1 cursor-pointer">
-                  No response (ghosted)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value="pending" id="response-pending" />
-                <Label htmlFor="response-pending" className="flex-1 cursor-pointer">
-                  Still waiting
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { value: "yes", label: "Yes, they responded", id: "response-yes" },
+                { value: "no", label: "No response (ghosted)", id: "response-no" },
+                { value: "pending", label: "Still waiting", id: "response-pending" }
+              ].map(({ value, label, id }) => (
+                <div 
+                  key={value}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                    formData.receivedResponse === value 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300'
+                  }`}
+                  onClick={() => handleResponseChange(value)}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    formData.receivedResponse === value
+                      ? 'border-blue-500 bg-blue-500'
+                      : 'border-gray-300'
+                  }`}>
+                    {formData.receivedResponse === value && (
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    )}
+                  </div>
+                  <Label htmlFor={id} className="flex-1 cursor-pointer">
+                    {label}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {showResponseDetails && (
@@ -351,25 +385,37 @@ export default function ExperienceForm({
                 <Label className="text-sm font-medium text-gray-700 block mb-3">
                   Communication Quality
                 </Label>
-                <RadioGroup 
-                  value={formData.communicationQuality} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, communicationQuality: value }))}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-3"
-                >
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     { value: "excellent", label: "Excellent" },
                     { value: "good", label: "Good" },
                     { value: "fair", label: "Fair" },
                     { value: "poor", label: "Poor" }
                   ].map(({ value, label }) => (
-                    <div key={value} className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value={value} id={`comm-${value}`} className="mb-2" />
+                    <div 
+                      key={value} 
+                      className={`flex flex-col items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                        formData.communicationQuality === value 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300'
+                      }`}
+                      onClick={() => handleCommunicationChange(value)}
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center mb-2 ${
+                        formData.communicationQuality === value
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {formData.communicationQuality === value && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
                       <Label htmlFor={`comm-${value}`} className="text-sm cursor-pointer">
                         {label}
                       </Label>
                     </div>
                   ))}
-                </RadioGroup>
+                </div>
               </div>
             </div>
           )}
@@ -379,30 +425,36 @@ export default function ExperienceForm({
             <Label className="text-sm font-medium text-gray-700 block mb-3">
               Were you offered an interview?
             </Label>
-            <RadioGroup 
-              value={formData.interviewOffered} 
-              onValueChange={handleInterviewChange}
-              className="grid grid-cols-1 md:grid-cols-3 gap-4"
-            >
-              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value="yes" id="interview-yes" />
-                <Label htmlFor="interview-yes" className="flex-1 cursor-pointer">
-                  Yes, I was interviewed
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value="no" id="interview-no" />
-                <Label htmlFor="interview-no" className="flex-1 cursor-pointer">
-                  No interview offered
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                <RadioGroupItem value="n/a" id="interview-na" />
-                <Label htmlFor="interview-na" className="flex-1 cursor-pointer">
-                  N/A (no response yet)
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { value: "yes", label: "Yes, I was interviewed", id: "interview-yes" },
+                { value: "no", label: "No interview offered", id: "interview-no" },
+                { value: "n/a", label: "N/A (no response yet)", id: "interview-na" }
+              ].map(({ value, label, id }) => (
+                <div 
+                  key={value}
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                    formData.interviewOffered === value 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300'
+                  }`}
+                  onClick={() => handleInterviewChange(value)}
+                >
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    formData.interviewOffered === value
+                      ? 'border-blue-500 bg-blue-500'
+                      : 'border-gray-300'
+                  }`}>
+                    {formData.interviewOffered === value && (
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    )}
+                  </div>
+                  <Label htmlFor={id} className="flex-1 cursor-pointer">
+                    {label}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {showInterviewDetails && (
@@ -447,30 +499,36 @@ export default function ExperienceForm({
                 <Label className="text-sm font-medium text-gray-700 block mb-3">
                   Were you offered the job?
                 </Label>
-                <RadioGroup 
-                  value={formData.jobOffered} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, jobOffered: value }))}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4"
-                >
-                  <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="yes" id="job-yes" />
-                    <Label htmlFor="job-yes" className="flex-1 cursor-pointer">
-                      Yes, got an offer
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="no" id="job-no" />
-                    <Label htmlFor="job-no" className="flex-1 cursor-pointer">
-                      No, was rejected
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                    <RadioGroupItem value="pending" id="job-pending" />
-                    <Label htmlFor="job-pending" className="flex-1 cursor-pointer">
-                      Still waiting
-                    </Label>
-                  </div>
-                </RadioGroup>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { value: "yes", label: "Yes, got an offer", id: "job-yes" },
+                    { value: "no", label: "No, was rejected", id: "job-no" },
+                    { value: "pending", label: "Still waiting", id: "job-pending" }
+                  ].map(({ value, label, id }) => (
+                    <div 
+                      key={value}
+                      className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                        formData.jobOffered === value 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-300'
+                      }`}
+                      onClick={() => handleJobOfferChange(value)}
+                    >
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        formData.jobOffered === value
+                          ? 'border-blue-500 bg-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {formData.jobOffered === value && (
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      <Label htmlFor={id} className="flex-1 cursor-pointer">
+                        {label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -481,48 +539,70 @@ export default function ExperienceForm({
               <Label className="text-sm font-medium text-gray-700 block mb-3">
                 Do you suspect this was a "ghost job" (fake posting)?
               </Label>
-              <RadioGroup 
-                value={formData.ghostJob} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, ghostJob: value }))}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              >
-                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <RadioGroupItem value="yes" id="ghost-yes" />
-                  <Label htmlFor="ghost-yes" className="flex-1 cursor-pointer">
-                    Yes, likely fake
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <RadioGroupItem value="no" id="ghost-no" />
-                  <Label htmlFor="ghost-no" className="flex-1 cursor-pointer">
-                    No, seemed legitimate
-                  </Label>
-                </div>
-              </RadioGroup>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { value: "yes", label: "Yes, likely fake", id: "ghost-yes" },
+                  { value: "no", label: "No, seemed legitimate", id: "ghost-no" }
+                ].map(({ value, label, id }) => (
+                  <div 
+                    key={value}
+                    className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                      formData.ghostJob === value 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-300'
+                    }`}
+                    onClick={() => handleGhostJobChange(value)}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      formData.ghostJob === value
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {formData.ghostJob === value && (
+                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                      )}
+                    </div>
+                    <Label htmlFor={id} className="flex-1 cursor-pointer">
+                      {label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
               <Label className="text-sm font-medium text-gray-700 block mb-3">
                 If rejected, did they provide feedback?
               </Label>
-              <RadioGroup 
-                value={formData.rejectionFeedback} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, rejectionFeedback: value }))}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              >
-                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <RadioGroupItem value="yes" id="feedback-yes" />
-                  <Label htmlFor="feedback-yes" className="flex-1 cursor-pointer">
-                    Yes, provided feedback
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                  <RadioGroupItem value="no" id="feedback-no" />
-                  <Label htmlFor="feedback-no" className="flex-1 cursor-pointer">
-                    No feedback given
-                  </Label>
-                </div>
-              </RadioGroup>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  { value: "yes", label: "Yes, provided feedback", id: "feedback-yes" },
+                  { value: "no", label: "No feedback given", id: "feedback-no" }
+                ].map(({ value, label, id }) => (
+                  <div 
+                    key={value}
+                    className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                      formData.rejectionFeedback === value 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-300'
+                    }`}
+                    onClick={() => handleRejectionFeedbackChange(value)}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      formData.rejectionFeedback === value
+                        ? 'border-blue-500 bg-blue-500'
+                        : 'border-gray-300'
+                    }`}>
+                      {formData.rejectionFeedback === value && (
+                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                      )}
+                    </div>
+                    <Label htmlFor={id} className="flex-1 cursor-pointer">
+                      {label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
