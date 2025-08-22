@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, TrendingUp, Shield, Users, Building, Bus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SimpleSelect, SimpleSelectContent, SimpleSelectItem, SimpleSelectTrigger, SimpleSelectValue } from "@/components/ui/simple-select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/navigation";
@@ -136,18 +136,18 @@ export default function Landing() {
             <div className="grid md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-                <Select value={filters.industry} onValueChange={(value) => setFilters(prev => ({ ...prev, industry: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Industries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Industries</SelectItem>
-                    <SelectItem value="technology">Technology</SelectItem>
-                    <SelectItem value="finance">Finance</SelectItem>
-                    <SelectItem value="healthcare">Healthcare</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SimpleSelect value={filters.industry} onValueChange={(value) => setFilters(prev => ({ ...prev, industry: value }))}>
+                  <SimpleSelectTrigger>
+                    <SimpleSelectValue placeholder="All Industries" />
+                  </SimpleSelectTrigger>
+                  <SimpleSelectContent>
+                    <SimpleSelectItem value="all">All Industries</SimpleSelectItem>
+                    <SimpleSelectItem value="technology">Technology</SimpleSelectItem>
+                    <SimpleSelectItem value="finance">Finance</SimpleSelectItem>
+                    <SimpleSelectItem value="healthcare">Healthcare</SimpleSelectItem>
+                    <SimpleSelectItem value="marketing">Marketing</SimpleSelectItem>
+                  </SimpleSelectContent>
+                </SimpleSelect>
               </div>
               
               <div>
@@ -161,31 +161,31 @@ export default function Landing() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Response Rate</label>
-                <Select value={filters.responseRate} onValueChange={(value) => setFilters(prev => ({ ...prev, responseRate: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any Rate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Any Rate</SelectItem>
-                    <SelectItem value="high">Above 70%</SelectItem>
-                    <SelectItem value="medium">30-70%</SelectItem>
-                    <SelectItem value="low">Below 30%</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SimpleSelect value={filters.responseRate} onValueChange={(value) => setFilters(prev => ({ ...prev, responseRate: value }))}>
+                  <SimpleSelectTrigger>
+                    <SimpleSelectValue placeholder="Any Rate" />
+                  </SimpleSelectTrigger>
+                  <SimpleSelectContent>
+                    <SimpleSelectItem value="all">Any Rate</SimpleSelectItem>
+                    <SimpleSelectItem value="high">Above 70%</SimpleSelectItem>
+                    <SimpleSelectItem value="medium">30-70%</SimpleSelectItem>
+                    <SimpleSelectItem value="low">Below 30%</SimpleSelectItem>
+                  </SimpleSelectContent>
+                </SimpleSelect>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                <Select defaultValue="rating">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="rating">Highest Rated</SelectItem>
-                    <SelectItem value="response_rate">Response Rate</SelectItem>
-                    <SelectItem value="recent">Most Recent</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SimpleSelect value="rating">
+                  <SimpleSelectTrigger>
+                    <SimpleSelectValue />
+                  </SimpleSelectTrigger>
+                  <SimpleSelectContent>
+                    <SimpleSelectItem value="rating">Highest Rated</SimpleSelectItem>
+                    <SimpleSelectItem value="response_rate">Response Rate</SimpleSelectItem>
+                    <SimpleSelectItem value="recent">Most Recent</SimpleSelectItem>
+                  </SimpleSelectContent>
+                </SimpleSelect>
               </div>
             </div>
           </Card>

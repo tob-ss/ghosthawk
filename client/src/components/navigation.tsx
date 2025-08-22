@@ -3,7 +3,7 @@ import { Search, Menu, X, User, LogOut, FileText } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { SimpleDropdown, SimpleDropdownItem, SimpleDropdownSeparator } from "@/components/ui/simple-dropdown";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -58,50 +58,50 @@ export default function Navigation() {
 
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <SimpleDropdown
+                trigger={
+                  <div className="relative h-8 w-8 rounded-full cursor-pointer hover:bg-gray-100 flex items-center justify-center">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || "User"} />
                       <AvatarFallback>
                         {user?.firstName?.[0] || user?.email?.[0] || "U"}
                       </AvatarFallback>
                     </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      {user?.firstName && (
-                        <p className="font-medium">{user.firstName} {user.lastName}</p>
-                      )}
-                      {user?.email && (
-                        <p className="w-[200px] truncate text-sm text-muted-foreground">
-                          {user.email}
-                        </p>
-                      )}
-                    </div>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/my-experiences">
-                      <FileText className="mr-2 h-4 w-4" />
-                      My Experiences
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => window.location.href = "/api/logout"}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                }
+                className="w-56"
+              >
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    {user?.firstName && (
+                      <p className="font-medium">{user.firstName} {user.lastName}</p>
+                    )}
+                    {user?.email && (
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <SimpleDropdownSeparator />
+                <SimpleDropdownItem>
+                  <Link href="/profile" className="flex items-center w-full">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Link>
+                </SimpleDropdownItem>
+                <SimpleDropdownItem>
+                  <Link href="/my-experiences" className="flex items-center w-full">
+                    <FileText className="mr-2 h-4 w-4" />
+                    My Experiences
+                  </Link>
+                </SimpleDropdownItem>
+                <SimpleDropdownSeparator />
+                <SimpleDropdownItem onClick={() => window.location.href = "/api/logout"}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </SimpleDropdownItem>
+              </SimpleDropdown>
             ) : (
               <div className="hidden md:flex items-center space-x-4">
                 <Button 

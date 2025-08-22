@@ -3,6 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Clean slate - let's start simple */
+
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(210 25% 7.8431%);

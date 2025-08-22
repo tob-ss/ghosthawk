@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SimpleSelect, SimpleSelectContent, SimpleSelectItem, SimpleSelectTrigger, SimpleSelectValue } from "@/components/ui/simple-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
@@ -183,19 +183,18 @@ export default function ExperienceForm() {
               <Label htmlFor="companyType" className="text-sm font-medium text-gray-700">
                 Type *
               </Label>
-              <Select 
+              <SimpleSelect 
                 value={formData.companyType} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, companyType: value }))}
-                required
               >
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="company">Direct Company Application</SelectItem>
-                  <SelectItem value="recruiter">External Recruiter/Agency</SelectItem>
-                </SelectContent>
-              </Select>
+                <SimpleSelectTrigger className="mt-2">
+                  <SimpleSelectValue placeholder="Select type" />
+                </SimpleSelectTrigger>
+                <SimpleSelectContent>
+                  <SimpleSelectItem value="company">Direct Company Application</SimpleSelectItem>
+                  <SimpleSelectItem value="recruiter">External Recruiter/Agency</SimpleSelectItem>
+                </SimpleSelectContent>
+              </SimpleSelect>
             </div>
           </div>
 
@@ -218,21 +217,21 @@ export default function ExperienceForm() {
               <Label htmlFor="industry" className="text-sm font-medium text-gray-700">
                 Industry
               </Label>
-              <Select 
+              <SimpleSelect 
                 value={formData.companyIndustry} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, companyIndustry: value }))}
               >
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select industry" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="finance">Finance</SelectItem>
-                  <SelectItem value="healthcare">Healthcare</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+                <SimpleSelectTrigger className="mt-2">
+                  <SimpleSelectValue placeholder="Select industry" />
+                </SimpleSelectTrigger>
+                <SimpleSelectContent>
+                  <SimpleSelectItem value="technology">Technology</SimpleSelectItem>
+                  <SimpleSelectItem value="finance">Finance</SimpleSelectItem>
+                  <SimpleSelectItem value="healthcare">Healthcare</SimpleSelectItem>
+                  <SimpleSelectItem value="marketing">Marketing</SimpleSelectItem>
+                  <SimpleSelectItem value="other">Other</SimpleSelectItem>
+                </SimpleSelectContent>
+              </SimpleSelect>
             </div>
           </div>
 
@@ -286,22 +285,22 @@ export default function ExperienceForm() {
                 <Label htmlFor="responseTime" className="text-sm font-medium text-gray-700">
                   Response Time
                 </Label>
-                <Select 
+                <SimpleSelect 
                   value={formData.responseTime} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, responseTime: value }))}
                 >
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Select timeframe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="same_day">Same day</SelectItem>
-                    <SelectItem value="1_3_days">1-3 days</SelectItem>
-                    <SelectItem value="1_week">1 week</SelectItem>
-                    <SelectItem value="2_weeks">2 weeks</SelectItem>
-                    <SelectItem value="1_month">1 month</SelectItem>
-                    <SelectItem value="longer">Longer than 1 month</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <SimpleSelectTrigger className="mt-2">
+                    <SimpleSelectValue placeholder="Select timeframe" />
+                  </SimpleSelectTrigger>
+                  <SimpleSelectContent>
+                    <SimpleSelectItem value="same_day">Same day</SimpleSelectItem>
+                    <SimpleSelectItem value="1_3_days">1-3 days</SimpleSelectItem>
+                    <SimpleSelectItem value="1_week">1 week</SimpleSelectItem>
+                    <SimpleSelectItem value="2_weeks">2 weeks</SimpleSelectItem>
+                    <SimpleSelectItem value="1_month">1 month</SimpleSelectItem>
+                    <SimpleSelectItem value="longer">Longer than 1 month</SimpleSelectItem>
+                  </SimpleSelectContent>
+                </SimpleSelect>
               </div>
 
               <div>
