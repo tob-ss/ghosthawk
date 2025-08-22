@@ -90,11 +90,11 @@ export default function CompaniesPage() {
   };
 
   const getGhostJobRisk = (score: number) => {
-    if (score <= 20) return { label: "Very Legitimate", color: "text-green-600", bg: "bg-green-100 text-green-800" };
-    if (score <= 40) return { label: "Mostly Legitimate", color: "text-green-500", bg: "bg-green-100 text-green-700" };
-    if (score <= 60) return { label: "Questionable", color: "text-yellow-600", bg: "bg-yellow-100 text-yellow-800" };
-    if (score <= 80) return { label: "Likely Ghost Jobs", color: "text-orange-600", bg: "bg-orange-100 text-orange-800" };
-    return { label: "High Ghost Risk", color: "text-red-600", bg: "bg-red-100 text-red-800" };
+    if (score <= 20) return { label: "Very Low Ghost Risk", color: "text-green-600", bg: "bg-green-100 text-green-800" };
+    if (score <= 40) return { label: "Low Ghost Risk", color: "text-green-500", bg: "bg-green-100 text-green-700" };
+    if (score <= 60) return { label: "Medium Ghost Risk", color: "text-yellow-600", bg: "bg-yellow-100 text-yellow-800" };
+    if (score <= 80) return { label: "High Ghost Risk", color: "text-orange-600", bg: "bg-orange-100 text-orange-800" };
+    return { label: "Very High Ghost Risk", color: "text-red-600", bg: "bg-red-100 text-red-800" };
   };
 
   return (

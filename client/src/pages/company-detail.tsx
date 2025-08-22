@@ -125,11 +125,11 @@ export default function CompanyDetail() {
   };
 
   const getGhostJobRisk = (score: number) => {
-    if (score <= 20) return { label: "Very Legitimate", color: "text-green-600", bgColor: "bg-green-600" };
-    if (score <= 40) return { label: "Mostly Legitimate", color: "text-green-500", bgColor: "bg-green-500" };
-    if (score <= 60) return { label: "Questionable", color: "text-yellow-600", bgColor: "bg-yellow-600" };
-    if (score <= 80) return { label: "Likely Ghost Jobs", color: "text-orange-600", bgColor: "bg-orange-600" };
-    return { label: "High Ghost Risk", color: "text-red-600", bgColor: "bg-red-600" };
+    if (score <= 20) return { label: "Very Low Ghost Risk", color: "text-green-600", bgColor: "bg-green-600" };
+    if (score <= 40) return { label: "Low Ghost Risk", color: "text-green-500", bgColor: "bg-green-500" };
+    if (score <= 60) return { label: "Medium Ghost Risk", color: "text-yellow-600", bgColor: "bg-yellow-600" };
+    if (score <= 80) return { label: "High Ghost Risk", color: "text-orange-600", bgColor: "bg-orange-600" };
+    return { label: "Very High Ghost Risk", color: "text-red-600", bgColor: "bg-red-600" };
   };
 
   const handleShareExperience = () => {
