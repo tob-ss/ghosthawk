@@ -30,7 +30,7 @@ export default function Home() {
     enabled: isAuthenticated,
   });
 
-  // Get recommended companies
+  // Get recommended companies (lowest ghost risk)
   const recommendedCompaniesQuery = "limit=4&sortBy=rating";
   const { data: companiesData } = useQuery<{
     companies: Array<{
@@ -245,7 +245,7 @@ export default function Home() {
             {/* Recommended Companies */}
             <Card>
               <CardHeader>
-                <CardTitle>Top Rated Companies</CardTitle>
+                <CardTitle>Lowest Ghost Risk Companies</CardTitle>
               </CardHeader>
               <CardContent>
                 {companiesData?.companies && companiesData.companies.length > 0 ? (

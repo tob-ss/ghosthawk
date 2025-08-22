@@ -33,7 +33,7 @@ export default function Landing() {
     queryKey: ["/api/stats"],
   });
 
-  // Get featured companies  
+  // Get featured companies (lowest ghost risk)
   const featuredCompaniesQuery = "limit=6&sortBy=rating";
   const { data: companiesData, isLoading: companiesLoading } = useQuery<{
     companies: Array<{
@@ -69,6 +69,14 @@ export default function Landing() {
     if (rate >= 70) return "bg-green-100 text-green-800";
     if (rate >= 30) return "bg-yellow-100 text-yellow-800";
     return "bg-red-100 text-red-800";
+  };
+
+  const getGhostJobRisk = (score: number) => {
+    if (score <= 20) return { label: "Very Low Ghost Risk", color: "text-green-600", bg: "bg-green-100 text-green-800" };
+    if (score <= 40) return { label: "Low Ghost Risk", color: "text-green-500", bg: "bg-green-100 text-green-700" };
+    if (score <= 60) return { label: "Medium Ghost Risk", color: "text-yellow-600", bg: "bg-yellow-100 text-yellow-800" };
+    if (score <= 80) return { label: "High Ghost Risk", color: "text-orange-600", bg: "bg-orange-100 text-orange-800" };
+    return { label: "Very High Ghost Risk", color: "text-red-600", bg: "bg-red-100 text-red-800" };
   };
 
   return (
@@ -144,7 +152,7 @@ export default function Landing() {
       <section id="discover" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">Top Rated Companies & Recruiters</h3>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Lowest Ghost Risk Companies & Recruiters</h3>
             <p className="text-lg text-gray-600">Discover companies with the best candidate experiences and response rates</p>
           </div>
 
@@ -200,11 +208,11 @@ export default function Landing() {
                           
                           <div>
                             <div className="flex items-center gap-1 mb-1">
-                              <Star className="h-4 w-4 text-gray-500" />
-                              <span className="text-xs text-gray-500">Rating</span>
+                              <Shield className="h-4 w-4 text-gray-500" />
+                              <span className="text-xs text-gray-500">Ghost Risk</span>
                             </div>
-                            <div className="text-lg font-semibold">
-                              {company.avgRating.toFixed(1)}/5.0
+                            <div className={`text-lg font-semibold ${getGhostJobRisk(company.avgRating).color}`}>
+                              {company.avgRating}%
                             </div>
                           </div>
                         </div>
@@ -214,9 +222,8 @@ export default function Landing() {
                             <Users className="h-3 w-3 mr-1" />
                             {company.totalExperiences} experiences
                           </div>
-                          <Badge className={getResponseRateBadge(company.responseRate)}>
-                            {company.responseRate >= 70 ? 'High Response' : 
-                             company.responseRate >= 30 ? 'Medium Response' : 'Low Response'}
+                          <Badge className={getGhostJobRisk(company.avgRating).bg}>
+                            {getGhostJobRisk(company.avgRating).label}
                           </Badge>
                         </div>
                       </CardContent>
