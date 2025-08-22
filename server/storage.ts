@@ -184,18 +184,10 @@ export class DatabaseStorage implements IStorage {
         jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
       })
       .from(companies)
-      .leftJoin(experiences, and(
-        eq(companies.id, experiences.companyId),
-        or(
-          eq(experiences.isAnonymous, false),
-          sql`${experiences.userId} IS NULL`
-        )
-      ))
+      .leftJoin(experiences, eq(companies.id, experiences.companyId))
       .where(whereClause)
       .groupBy(companies.id)
-      .having(sql`count(${experiences.id}) > 0`)
-      .offset(offset)
-      .limit(limit);
+      .having(sql`count(${experiences.id}) > 0`);
 
     // Calculate derived metrics
     const companiesWithMetrics = companiesWithStats.map(company => {
@@ -265,42 +257,14 @@ export class DatabaseStorage implements IStorage {
       }
     });
 
-    // Get total count of ALL filtered companies (not just current page)
-    // We need to run the same query without pagination to get accurate count
-    const allCompaniesWithStats = await db
-      .select({
-        id: companies.id,
-        totalExperiences: sql<number>`cast(count(${experiences.id}) as int)`,
-        responseCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
-      })
-      .from(companies)
-      .leftJoin(experiences, and(
-        eq(companies.id, experiences.companyId),
-        or(
-          eq(experiences.isAnonymous, false),
-          sql`${experiences.userId} IS NULL`
-        )
-      ))
-      .where(whereClause)
-      .groupBy(companies.id)
-      .having(sql`count(${experiences.id}) > 0`);
+    // Total count is handled by filteredCompanies.length
 
-    // Apply the same response rate filtering to get accurate total count
-    const totalCount = allCompaniesWithStats.filter(company => {
-      const responseRateCalc = company.totalExperiences > 0 
-        ? Math.round((company.responseCount / company.totalExperiences) * 100)
-        : 0;
-      
-      if (!responseRate) return true;
-      if (responseRate === 'high') return responseRateCalc >= 70;
-      if (responseRate === 'medium') return responseRateCalc >= 30 && responseRateCalc < 70;
-      if (responseRate === 'low') return responseRateCalc < 30;
-      return true;
-    }).length;
+    // Apply pagination after sorting
+    const paginatedCompanies = filteredCompanies.slice(offset, offset + limit);
 
     return {
-      companies: filteredCompanies,
-      total: totalCount,
+      companies: paginatedCompanies,
+      total: filteredCompanies.length, // Total count should be filtered companies, not separate calculation
     };
   }
 
