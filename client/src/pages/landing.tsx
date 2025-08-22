@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, TrendingUp, Shield, Users, Building, Bus, Star } from "lucide-react";
+import { Search, TrendingUp, Shield, Users, Building, Bus, Star, MapPin, Globe, ArrowRight, MessageSquare, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect, SimpleSelectContent, SimpleSelectItem, SimpleSelectTrigger, SimpleSelectValue } from "@/components/ui/simple-select";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/navigation";
 import SearchBar from "@/components/search-bar";
 import CompanyCard from "@/components/company-card";
 import InsightsDashboard from "@/components/insights-dashboard";
+import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,6 +22,8 @@ export default function Landing() {
     responseRate: "",
   });
 
+  const { isAuthenticated } = useAuth();
+
   // Get platform stats
   const { data: stats } = useQuery<{
     totalCompanies: number;
@@ -29,7 +33,8 @@ export default function Landing() {
     queryKey: ["/api/stats"],
   });
 
-  // Get featured companies
+  // Get featured companies  
+  const featuredCompaniesQuery = "limit=6&sortBy=rating";
   const { data: companiesData, isLoading: companiesLoading } = useQuery<{
     companies: Array<{
       id: string;
@@ -44,7 +49,7 @@ export default function Landing() {
     }>;
     total: number;
   }>({
-    queryKey: ["/api/companies/search", { limit: 6, sortBy: "rating" }],
+    queryKey: [`/api/companies/search?${featuredCompaniesQuery}`],
   });
 
   const handleSearch = () => {
@@ -52,6 +57,18 @@ export default function Landing() {
       // In a real app, this would navigate to results
       console.log("Searching for:", searchQuery, filters);
     }
+  };
+
+  const getResponseRateColor = (rate: number) => {
+    if (rate >= 70) return "text-green-600";
+    if (rate >= 30) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getResponseRateBadge = (rate: number) => {
+    if (rate >= 70) return "bg-green-100 text-green-800";
+    if (rate >= 30) return "bg-yellow-100 text-yellow-800";
+    return "bg-red-100 text-red-800";
   };
 
   return (
@@ -123,126 +140,160 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Company Discovery */}
+      {/* Featured Companies */}
       <section id="discover" className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">Discover Companies & Recruiters</h3>
-            <p className="text-lg text-gray-600">Research companies before you apply. See real candidate experiences and response rates.</p>
+          <div className="mb-8 text-center">
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Top Rated Companies & Recruiters</h3>
+            <p className="text-lg text-gray-600">Discover companies with the best candidate experiences and response rates</p>
           </div>
 
-          {/* Filter Panel */}
-          <Card className="p-6 mb-8">
-            <div className="grid md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-                <SimpleSelect value={filters.industry} onValueChange={(value) => setFilters(prev => ({ ...prev, industry: value }))}>
-                  <SimpleSelectTrigger>
-                    <SimpleSelectValue placeholder="All Industries" />
-                  </SimpleSelectTrigger>
-                  <SimpleSelectContent>
-                    <SimpleSelectItem value="all">All Industries</SimpleSelectItem>
-                    <SimpleSelectItem value="technology">Technology</SimpleSelectItem>
-                    <SimpleSelectItem value="finance">Finance</SimpleSelectItem>
-                    <SimpleSelectItem value="healthcare">Healthcare</SimpleSelectItem>
-                    <SimpleSelectItem value="marketing">Marketing</SimpleSelectItem>
-                  </SimpleSelectContent>
-                </SimpleSelect>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                <Input 
-                  placeholder="City, State" 
-                  value={filters.location}
-                  onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Response Rate</label>
-                <SimpleSelect value={filters.responseRate} onValueChange={(value) => setFilters(prev => ({ ...prev, responseRate: value }))}>
-                  <SimpleSelectTrigger>
-                    <SimpleSelectValue placeholder="Any Rate" />
-                  </SimpleSelectTrigger>
-                  <SimpleSelectContent>
-                    <SimpleSelectItem value="all">Any Rate</SimpleSelectItem>
-                    <SimpleSelectItem value="high">Above 70%</SimpleSelectItem>
-                    <SimpleSelectItem value="medium">30-70%</SimpleSelectItem>
-                    <SimpleSelectItem value="low">Below 30%</SimpleSelectItem>
-                  </SimpleSelectContent>
-                </SimpleSelect>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                <SimpleSelect value="rating">
-                  <SimpleSelectTrigger>
-                    <SimpleSelectValue />
-                  </SimpleSelectTrigger>
-                  <SimpleSelectContent>
-                    <SimpleSelectItem value="rating">Highest Rated</SimpleSelectItem>
-                    <SimpleSelectItem value="response_rate">Response Rate</SimpleSelectItem>
-                    <SimpleSelectItem value="recent">Most Recent</SimpleSelectItem>
-                  </SimpleSelectContent>
-                </SimpleSelect>
-              </div>
-            </div>
-          </Card>
-
-          {/* Featured Companies */}
           {companiesLoading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {[...Array(6)].map((_, i) => (
-                <Card key={i} className="p-6 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded mb-4"></div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="h-8 bg-gray-200 rounded"></div>
-                    <div className="h-8 bg-gray-200 rounded"></div>
-                  </div>
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="h-6 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
           ) : companiesData?.companies && companiesData.companies.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {companiesData.companies.map((company) => (
-                <CompanyCard key={company.id} company={company} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {companiesData.companies.map((company) => (
+                  <Link key={company.id} href={`/company/${company.id}`}>
+                    <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg mb-2">{company.name}</CardTitle>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline">
+                                {company.type === 'company' ? 'Direct Company' : 'Recruiter'}
+                              </Badge>
+                              {company.industry && (
+                                <Badge variant="secondary">{company.industry}</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      
+                      <CardContent className="pt-0">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="flex items-center gap-1 mb-1">
+                              <TrendingUp className="h-4 w-4 text-gray-500" />
+                              <span className="text-xs text-gray-500">Response Rate</span>
+                            </div>
+                            <div className={`text-lg font-semibold ${getResponseRateColor(company.responseRate)}`}>
+                              {company.responseRate}%
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center gap-1 mb-1">
+                              <Star className="h-4 w-4 text-gray-500" />
+                              <span className="text-xs text-gray-500">Rating</span>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {company.avgRating.toFixed(1)}/5.0
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Users className="h-3 w-3 mr-1" />
+                            {company.totalExperiences} experiences
+                          </div>
+                          <Badge className={getResponseRateBadge(company.responseRate)}>
+                            {company.responseRate >= 70 ? 'High Response' : 
+                             company.responseRate >= 30 ? 'Medium Response' : 'Low Response'}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+              
+              <div className="text-center">
+                <Link href="/companies">
+                  <Button size="lg" variant="outline" className="inline-flex items-center">
+                    View All Companies
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </>
           ) : (
             <Card className="p-8 text-center">
               <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h4 className="text-lg font-medium text-gray-900 mb-2">No Companies Found</h4>
-              <p className="text-gray-600">Try adjusting your search filters or be the first to report an experience with a company.</p>
+              <p className="text-gray-600">Be the first to report an experience with a company.</p>
             </Card>
           )}
         </div>
       </section>
 
-      {/* Call to Action */}
+      {/* Share Experience CTA */}
       <section className="py-16 bg-blue-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl font-bold mb-4">Ready to Make Better Career Decisions?</h3>
+          <h3 className="text-3xl font-bold mb-4">Share Your Experience</h3>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of job seekers who use GhostHawk to research companies and share experiences.
+            Help other job seekers by sharing your recruitment experiences. Every story matters and builds a stronger community.
           </p>
           <div className="flex justify-center gap-4">
-            <Button 
-              size="lg" 
-              variant="secondary"
-              onClick={() => window.location.href = "/api/login"}
-            >
-              Sign Up Free
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-white border-white hover:bg-white hover:text-blue-600"
-            >
-              Learn More
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Link href="/report">
+                  <Button size="lg" variant="secondary" className="inline-flex items-center">
+                    <MessageSquare className="h-5 w-5 mr-2" />
+                    Report Experience
+                  </Button>
+                </Link>
+                <Link href="/my-experiences">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="text-white border-white hover:bg-white hover:text-blue-600 inline-flex items-center"
+                  >
+                    <FileText className="h-5 w-5 mr-2" />
+                    View My Experiences
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Button 
+                  size="lg" 
+                  variant="secondary"
+                  onClick={() => window.location.href = "/api/login"}
+                  className="inline-flex items-center"
+                >
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  Sign Up & Share
+                </Button>
+                <Link href="/companies">
+                  <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="text-white border-white hover:bg-white hover:text-blue-600 inline-flex items-center"
+                  >
+                    <Building className="h-5 w-5 mr-2" />
+                    Browse Companies
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

@@ -126,8 +126,16 @@ export default function CompanyDetail() {
 
   const handleShareExperience = () => {
     if (!isAuthenticated) {
-      // Redirect to login
-      window.location.href = "/api/login";
+      // Create the report URL with pre-filled company data
+      const params = new URLSearchParams();
+      if (company?.name) params.set('company', company.name);
+      if (company?.type) params.set('type', company.type);
+      if (company?.industry) params.set('industry', company.industry.toLowerCase());
+      
+      const reportUrl = `/report?${params.toString()}`;
+      
+      // Redirect to login with return URL
+      window.location.href = `/api/login?returnTo=${encodeURIComponent(reportUrl)}`;
     } else {
       // Redirect to report experience with pre-filled company data
       const params = new URLSearchParams();

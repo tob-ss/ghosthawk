@@ -33,7 +33,15 @@ export async function setupAuth(app: Express) {
         last_name: 'User'
       }
     };
-    res.redirect("/");
+    
+    // Check for returnTo parameter and redirect accordingly
+    const returnTo = req.query.returnTo as string;
+    if (returnTo && returnTo.startsWith('/')) {
+      // Only allow relative URLs for security
+      res.redirect(returnTo);
+    } else {
+      res.redirect("/");
+    }
   });
 
   app.get("/api/logout", (req, res) => {
