@@ -393,16 +393,20 @@ export class DatabaseStorage implements IStorage {
 
   // Insights operations
   async getIndustryInsights(): Promise<{
-    industryStats: Record<string, { responseRate: number; avgResponseTime: number }>;
-    topCompanies: { name: string; score: number }[];
+    industryStats: Record<string, { responseRate: number; avgResponseTime: number; ghostRisk: number }>;
+    topCompanies: { name: string; score: number; reportCount: number }[];
     recentTrends: string[];
   }> {
-    // Get industry stats
+    // Get industry stats with ghost risk calculation
     const industryData = await db
       .select({
         industry: companies.industry,
+        companyId: companies.id,
         totalExperiences: sql<number>`cast(count(*) as int)`,
         responseCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
+        legitimateJobReports: sql<number>`cast(sum(case when ${experiences.ghostJob} = false then 1 else 0 end) as int)`,
+        interviewsOffered: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true then 1 else 0 end) as int)`,
+        jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
         avgResponseTimeHours: sql<number>`avg(case 
           when ${experiences.responseTime} = 'same_day' then 0.5
           when ${experiences.responseTime} = '1_3_days' then 2
@@ -416,50 +420,109 @@ export class DatabaseStorage implements IStorage {
       .from(companies)
       .leftJoin(experiences, eq(companies.id, experiences.companyId))
       .where(sql`${companies.industry} IS NOT NULL`)
-      .groupBy(companies.industry)
+      .groupBy(companies.industry, companies.id)
       .having(sql`count(${experiences.id}) > 0`);
 
-    const industryStats: Record<string, { responseRate: number; avgResponseTime: number }> = {};
-    industryData.forEach(industry => {
-      if (industry.industry) {
-        industryStats[industry.industry] = {
-          responseRate: Math.round((industry.responseCount / industry.totalExperiences) * 100),
-          avgResponseTime: Math.round((industry.avgResponseTimeHours || 0) * 10) / 10,
-        };
+    // Calculate ghost risk for each company, then average by industry
+    const industryGhostRisks: Record<string, number[]> = {};
+    const industryResponseRates: Record<string, number[]> = {};
+    const industryResponseTimes: Record<string, number[]> = {};
+
+    industryData.forEach(company => {
+      if (company.industry) {
+        // Calculate ghost score for this company (same logic as searchCompanies)
+        const responseRate = company.totalExperiences > 0 
+          ? (company.responseCount / company.totalExperiences) * 100 
+          : 0;
+        
+        const legitimateJobPercentage = company.totalExperiences > 0
+          ? (company.legitimateJobReports / company.totalExperiences) * 100
+          : 0;
+
+        const goodInterviewOutcomeRatio = company.interviewsOffered > 0
+          ? (company.jobsOffered / company.interviewsOffered) * 100
+          : 0;
+
+        const ghostScore = Math.round(
+          ((100 - responseRate) * 0.4) + 
+          ((100 - legitimateJobPercentage) * 0.4) + 
+          ((100 - goodInterviewOutcomeRatio) * 0.2)
+        );
+
+        // Group by industry
+        if (!industryGhostRisks[company.industry]) {
+          industryGhostRisks[company.industry] = [];
+          industryResponseRates[company.industry] = [];
+          industryResponseTimes[company.industry] = [];
+        }
+        
+        industryGhostRisks[company.industry].push(ghostScore);
+        industryResponseRates[company.industry].push(responseRate);
+        if (company.avgResponseTimeHours) {
+          industryResponseTimes[company.industry].push(company.avgResponseTimeHours);
+        }
       }
     });
 
-    // Get top companies
-    const topCompaniesData = await db
+    // Calculate averages by industry
+    const industryStats: Record<string, { responseRate: number; avgResponseTime: number; ghostRisk: number }> = {};
+    Object.keys(industryGhostRisks).forEach(industry => {
+      const ghostRisks = industryGhostRisks[industry];
+      const responsRates = industryResponseRates[industry];
+      const responseTimes = industryResponseTimes[industry];
+      
+      industryStats[industry] = {
+        ghostRisk: Math.round(ghostRisks.reduce((a, b) => a + b, 0) / ghostRisks.length),
+        responseRate: Math.round(responsRates.reduce((a, b) => a + b, 0) / responsRates.length),
+        avgResponseTime: responseTimes.length > 0 
+          ? Math.round((responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) * 10) / 10
+          : 0,
+      };
+    });
+
+    // Get most reported companies with ghost risk scores
+    const mostReportedCompaniesData = await db
       .select({
         name: companies.name,
         totalExperiences: sql<number>`cast(count(*) as int)`,
         responseCount: sql<number>`cast(sum(case when ${experiences.receivedResponse} then 1 else 0 end) as int)`,
-        communicationScore: sql<number>`avg(case 
-          when ${experiences.communicationQuality} = 'excellent' then 5
-          when ${experiences.communicationQuality} = 'good' then 4
-          when ${experiences.communicationQuality} = 'fair' then 3
-          when ${experiences.communicationQuality} = 'poor' then 2
-          else 3
-        end)`,
+        legitimateJobReports: sql<number>`cast(sum(case when ${experiences.ghostJob} = false then 1 else 0 end) as int)`,
+        interviewsOffered: sql<number>`cast(sum(case when ${experiences.interviewOffered} = true then 1 else 0 end) as int)`,
+        jobsOffered: sql<number>`cast(sum(case when ${experiences.jobOffered} = true then 1 else 0 end) as int)`,
       })
       .from(companies)
       .leftJoin(experiences, eq(companies.id, experiences.companyId))
       .groupBy(companies.id, companies.name)
-      .having(sql`count(*) >= 5`)
-      .orderBy(desc(sql`avg(case 
-        when ${experiences.communicationQuality} = 'excellent' then 5
-        when ${experiences.communicationQuality} = 'good' then 4
-        when ${experiences.communicationQuality} = 'fair' then 3
-        when ${experiences.communicationQuality} = 'poor' then 2
-        else 3
-      end)`))
-      .limit(5);
+      .having(sql`count(*) >= 1`)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
 
-    const topCompanies = topCompaniesData.map(company => ({
-      name: company.name,
-      score: Math.round((company.communicationScore || 3) * 100) / 100,
-    }));
+    const topCompanies = mostReportedCompaniesData.map(company => {
+      // Calculate ghost risk score for each company
+      const responseRate = company.totalExperiences > 0 
+        ? (company.responseCount / company.totalExperiences) * 100 
+        : 0;
+      
+      const legitimateJobPercentage = company.totalExperiences > 0
+        ? (company.legitimateJobReports / company.totalExperiences) * 100
+        : 0;
+
+      const goodInterviewOutcomeRatio = company.interviewsOffered > 0
+        ? (company.jobsOffered / company.interviewsOffered) * 100
+        : 0;
+
+      const ghostScore = Math.round(
+        ((100 - responseRate) * 0.4) + 
+        ((100 - legitimateJobPercentage) * 0.4) + 
+        ((100 - goodInterviewOutcomeRatio) * 0.2)
+      );
+
+      return {
+        name: company.name,
+        score: ghostScore,
+        reportCount: company.totalExperiences,
+      };
+    });
 
     // Mock recent trends for now
     const recentTrends = [

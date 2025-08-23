@@ -69,6 +69,14 @@ export default function StatsPage() {
     queryKey: ['/api/stats/detailed'],
   });
 
+  const getGhostJobRisk = (score: number) => {
+    if (score <= 20) return { label: "Very Low Ghost Risk", color: "bg-green-100 text-green-800" };
+    if (score <= 40) return { label: "Low Ghost Risk", color: "bg-green-100 text-green-800" };
+    if (score <= 60) return { label: "Medium Ghost Risk", color: "bg-yellow-100 text-yellow-800" };
+    if (score <= 80) return { label: "High Ghost Risk", color: "bg-orange-100 text-orange-800" };
+    return { label: "Very High Ghost Risk", color: "bg-red-100 text-red-800" };
+  };
+
   if (basicLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -84,14 +92,25 @@ export default function StatsPage() {
     Object.entries(insights.industryStats).map(([industry, stats]) => ({
       industry,
       responseRate: (stats as any).responseRate,
-      avgResponseTime: (stats as any).avgResponseTime
+      avgResponseTime: (stats as any).avgResponseTime,
+      ghostRisk: (stats as any).ghostRisk || 0
     })) : [];
 
   const communicationData = detailedStats?.communicationBreakdown ? 
-    Object.entries(detailedStats.communicationBreakdown).map(([quality, count]) => ({
-      name: quality.charAt(0).toUpperCase() + quality.slice(1),
-      value: count
-    })) : [];
+    Object.entries(detailedStats.communicationBreakdown).map(([quality, count]) => {
+      const qualityColors: Record<string, string> = {
+        excellent: '#10B981', // green
+        good: '#84CC16',      // light green
+        fair: '#F59E0B',      // yellow/orange
+        poor: '#EF4444'       // red
+      };
+      
+      return {
+        name: quality.charAt(0).toUpperCase() + quality.slice(1),
+        value: count,
+        color: qualityColors[quality] || '#6B7280'
+      };
+    }) : [];
 
   const companyTypeData = detailedStats?.companyTypeStats ?
     Object.entries(detailedStats.companyTypeStats).map(([type, stats]) => ({
@@ -217,7 +236,7 @@ export default function StatsPage() {
                     <Clock className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">5.2d</p>
+                    <p className="text-2xl font-bold text-gray-900">5.2 days</p>
                     <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
                   </div>
                 </div>
@@ -262,15 +281,15 @@ export default function StatsPage() {
           </h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Industries: Hiring vs Ghost Posting */}
+            {/* Industries: Ghost Risk Analysis */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center text-lg">
                   <PieChart className="h-5 w-5 mr-2" />
-                  Industries: Legitimate vs Ghost Jobs
+                  Industries: Ghost Risk Analysis
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">
-                  Which industries have real opportunities vs ghost postings
+                  Ghost risk score by industry (lower is safer)
                 </p>
               </CardHeader>
               <CardContent>
@@ -283,20 +302,18 @@ export default function StatsPage() {
                         angle={-45}
                         textAnchor="end"
                         height={80}
+                        fontSize={12}
                       />
-                      <YAxis />
+                      <YAxis fontSize={12} />
                       <Tooltip 
-                        formatter={(value, name) => [
-                          `${value}${name === 'responseRate' ? '%' : ' days'}`,
-                          name === 'responseRate' ? 'Response Rate' : 'Avg Response Time'
-                        ]}
+                        formatter={(value) => [`${value}%`, 'Ghost Risk Score']}
                       />
                       <Legend />
-                      <Bar dataKey="responseRate" fill="#0088FE" name="Response Rate %" />
+                      <Bar dataKey="ghostRisk" fill="#EF4444" name="Ghost Risk Score %" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="text-center text-gray-500 py-8 text-sm">
                     Building industry insights...
                   </div>
                 )}
@@ -306,7 +323,7 @@ export default function StatsPage() {
             {/* Recruiter vs Direct Company Performance */}
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center text-lg">
                   <Users className="h-5 w-5 mr-2" />
                   Recruiters vs Direct Companies
                 </CardTitle>
@@ -375,7 +392,7 @@ export default function StatsPage() {
                       dataKey="value"
                     >
                       {communicationData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -404,15 +421,15 @@ export default function StatsPage() {
             </CardContent>
           </Card>
 
-          {/* Interview Success Patterns */}
+          {/* Interview Rates */}
           <Card className="border-0 shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center">
+              <CardTitle className="flex items-center text-lg">
                 <Target className="h-5 w-5 mr-2" />
-                Interview Success Patterns
+                Interview Rates
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
-                Understanding the interview-to-offer conversion rates
+                Application to interview conversion rates by industry
               </p>
             </CardHeader>
             <CardContent>
@@ -425,8 +442,9 @@ export default function StatsPage() {
                       angle={-45}
                       textAnchor="end"
                       height={80}
+                      fontSize={12}
                     />
-                    <YAxis />
+                    <YAxis fontSize={12} />
                     <Tooltip 
                       formatter={(value) => [`${value}%`, 'Interview Rate']}
                     />
@@ -476,28 +494,17 @@ export default function StatsPage() {
                       <span className="font-medium">{company.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{Math.floor(Math.random() * 50) + 10} reports</Badge>
-                      <Badge className="bg-blue-100 text-blue-800">{company.score}/5.0 rating</Badge>
+                      <Badge variant="secondary">{company.reportCount} reports</Badge>
+                      <Badge className={getGhostJobRisk(company.score).color}>
+                        {getGhostJobRisk(company.score).label}
+                      </Badge>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
-                {['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple', 'Netflix', 'Tesla', 'Uber'].map((company, index) => (
-                  <div key={company} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-sm font-medium text-blue-600">#{index + 1}</span>
-                      </div>
-                      <span className="font-medium">{company}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{Math.floor(Math.random() * 50) + 10} reports</Badge>
-                      <Badge className="bg-blue-100 text-blue-800">{(Math.random() * 2 + 3).toFixed(1)}/5.0 rating</Badge>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center text-gray-500 py-8 text-sm">
+                No company data available yet...
               </div>
             )}
           </CardContent>
