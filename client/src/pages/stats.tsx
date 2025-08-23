@@ -4,11 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/navigation";
 import { 
   TrendingUp, 
-  TrendingDown, 
   Building2, 
   FileText, 
   Clock, 
-  MessageSquare,
   Users,
   BarChart3,
   PieChart,
@@ -24,12 +22,7 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line
+  ResponsiveContainer
 } from "recharts";
 
 interface StatsData {
@@ -44,6 +37,13 @@ interface DetailedStatsData {
   recentTrends: string[];
   communicationBreakdown: Record<string, number>;
   responseTimeBreakdown: Record<string, number>;
+  responseTimeInsights: {
+    totalResponses: number;
+    withinWeek: number;
+    withinMonth: number;
+    longerThanMonth: number;
+    averageResponseTime: string;
+  };
   companyTypeStats: Record<string, { count: number; avgResponseRate: number }>;
   monthlyTrends: { month: string; companies: number; experiences: number; responseRate: number }[];
   interviewStats: {
@@ -77,6 +77,13 @@ export default function StatsPage() {
     return { label: "Very High Ghost Risk", color: "bg-red-100 text-red-800" };
   };
 
+  // Calculate dynamic metrics
+  const averageGhostRisk = insights?.industryStats ? 
+    Math.round(Object.values(insights.industryStats).reduce((sum: number, stats: any) => sum + stats.ghostRisk, 0) / Object.values(insights.industryStats).length) : 0;
+  
+  const averageResponseRate = insights?.industryStats ?
+    Math.round(Object.values(insights.industryStats).reduce((sum: number, stats: any) => sum + stats.responseRate, 0) / Object.values(insights.industryStats).length) : 0;
+
   if (basicLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -96,21 +103,6 @@ export default function StatsPage() {
       ghostRisk: (stats as any).ghostRisk || 0
     })) : [];
 
-  const communicationData = detailedStats?.communicationBreakdown ? 
-    Object.entries(detailedStats.communicationBreakdown).map(([quality, count]) => {
-      const qualityColors: Record<string, string> = {
-        excellent: '#10B981', // green
-        good: '#84CC16',      // light green
-        fair: '#F59E0B',      // yellow/orange
-        poor: '#EF4444'       // red
-      };
-      
-      return {
-        name: quality.charAt(0).toUpperCase() + quality.slice(1),
-        value: count,
-        color: qualityColors[quality] || '#6B7280'
-      };
-    }) : [];
 
   const companyTypeData = detailedStats?.companyTypeStats ?
     Object.entries(detailedStats.companyTypeStats).map(([type, stats]) => ({
@@ -222,8 +214,8 @@ export default function StatsPage() {
                     <AlertTriangle className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">25%</p>
-                    <p className="text-sm font-medium text-gray-600">Ghost Job Rate</p>
+                    <p className="text-2xl font-bold text-gray-900">{averageGhostRisk}%</p>
+                    <p className="text-sm font-medium text-gray-600">Ghost Job Risk Rate</p>
                   </div>
                 </div>
               </CardContent>
@@ -236,8 +228,8 @@ export default function StatsPage() {
                     <Clock className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">5.2 days</p>
-                    <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
+                    <p className="text-2xl font-bold text-gray-900">{averageResponseRate}%</p>
+                    <p className="text-sm font-medium text-gray-600">Avg Response Rate</p>
                   </div>
                 </div>
               </CardContent>
@@ -271,6 +263,55 @@ export default function StatsPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Response Time Insights */}
+        <div className="mb-12">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-gray-50 to-gray-100">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Clock className="h-5 w-5 mr-2 text-blue-600" />
+                Response Time Insights
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                How quickly companies typically respond to applications
+              </p>
+            </CardHeader>
+            <CardContent>
+              {detailedStats?.responseTimeInsights ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
+                    <p className="text-2xl font-bold text-green-600">
+                      {detailedStats.responseTimeInsights.withinWeek}%
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">respond within 1 week</p>
+                  </div>
+                  <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {detailedStats.responseTimeInsights.withinMonth}%
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">respond within 1 month</p>
+                  </div>
+                  <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
+                    <p className="text-2xl font-bold text-red-600">
+                      {detailedStats.responseTimeInsights.longerThanMonth}%
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">take longer than 1 month</p>
+                  </div>
+                  <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
+                    <p className="text-lg font-bold text-gray-900">
+                      {detailedStats.responseTimeInsights.averageResponseTime}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">average response time</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8 text-sm">
+                  Building response time insights...
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Market Insights */}
@@ -364,63 +405,8 @@ export default function StatsPage() {
           </div>
         </div>
 
-        {/* Additional Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Communication Quality Distribution */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2" />
-                Communication Quality Trends
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                How companies communicate during hiring processes
-              </p>
-            </CardHeader>
-            <CardContent>
-              {communicationData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsPieChart>
-                    <Pie
-                      data={communicationData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {communicationData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="font-medium">Excellent</span>
-                    <Badge className="bg-green-100 text-green-800">25%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="font-medium">Good</span>
-                    <Badge className="bg-blue-100 text-blue-800">35%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
-                    <span className="font-medium">Fair</span>
-                    <Badge className="bg-yellow-100 text-yellow-800">25%</Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                    <span className="font-medium">Poor</span>
-                    <Badge className="bg-red-100 text-red-800">15%</Badge>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
+        {/* Interview Rates */}
+        <div className="mb-12">
           {/* Interview Rates */}
           <Card className="border-0 shadow-lg">
             <CardHeader>

@@ -541,6 +541,13 @@ export class DatabaseStorage implements IStorage {
   async getDetailedStats(): Promise<{
     communicationBreakdown: Record<string, number>;
     responseTimeBreakdown: Record<string, number>;
+    responseTimeInsights: {
+      totalResponses: number;
+      withinWeek: number;
+      withinMonth: number;
+      longerThanMonth: number;
+      averageResponseTime: string;
+    };
     companyTypeStats: Record<string, { count: number; avgResponseRate: number }>;
     monthlyTrends: { month: string; companies: number; experiences: number; responseRate: number }[];
   }> {
@@ -577,6 +584,42 @@ export class DatabaseStorage implements IStorage {
         responseTimeBreakdown[item.responseTime] = item.count;
       }
     });
+
+    // Calculate response time insights
+    const totalResponses = Object.values(responseTimeBreakdown).reduce((sum, count) => sum + count, 0);
+    const sameDayCount = responseTimeBreakdown['same_day'] || 0;
+    const days1to3Count = responseTimeBreakdown['1_3_days'] || 0;
+    const week1Count = responseTimeBreakdown['1_week'] || 0;
+    const weeks2Count = responseTimeBreakdown['2_weeks'] || 0;
+    const month1Count = responseTimeBreakdown['1_month'] || 0;
+    const longerCount = responseTimeBreakdown['longer'] || 0;
+
+    const withinWeekCount = sameDayCount + days1to3Count + week1Count;
+    const withinMonthCount = withinWeekCount + weeks2Count + month1Count;
+
+    // Calculate weighted average response time
+    const weightedTotal = (sameDayCount * 0.5) + (days1to3Count * 2) + (week1Count * 7) + 
+                         (weeks2Count * 14) + (month1Count * 30) + (longerCount * 45);
+    const averageDays = totalResponses > 0 ? weightedTotal / totalResponses : 0;
+    
+    // Convert to readable format with approximation symbol
+    let averageResponseTimeLabel = 'N/A';
+    if (averageDays > 0) {
+      if (averageDays <= 1) averageResponseTimeLabel = '~ 1 day';
+      else if (averageDays <= 3) averageResponseTimeLabel = '~ 2-3 days';
+      else if (averageDays <= 7) averageResponseTimeLabel = '~ 1 week';
+      else if (averageDays <= 14) averageResponseTimeLabel = '~ 2 weeks';
+      else if (averageDays <= 30) averageResponseTimeLabel = '~ 1 month';
+      else averageResponseTimeLabel = '~ 1+ months';
+    }
+
+    const responseTimeInsights = {
+      totalResponses,
+      withinWeek: totalResponses > 0 ? Math.round((withinWeekCount / totalResponses) * 100) : 0,
+      withinMonth: totalResponses > 0 ? Math.round((withinMonthCount / totalResponses) * 100) : 0,
+      longerThanMonth: totalResponses > 0 ? Math.round((longerCount / totalResponses) * 100) : 0,
+      averageResponseTime: averageResponseTimeLabel,
+    };
 
     // Get company type statistics
     const companyTypeData = await db
@@ -688,6 +731,7 @@ export class DatabaseStorage implements IStorage {
     return {
       communicationBreakdown,
       responseTimeBreakdown,
+      responseTimeInsights,
       companyTypeStats,
       monthlyTrends,
       interviewStats: {
